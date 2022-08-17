@@ -17,9 +17,18 @@ ips = [
 
 
 class MyTestCase(unittest.TestCase):
-    def test_prim_2_poly_3_7x7(self):
-        testMulTab_3 = MulTab(2, P(ips[3]))
+    def test_prim_2_poly_3(self):
+        p = 2
+        e = 3
+        testMulTab_3 = MulTab(p, P(ips[e]))
+        # test position 7x7
         self.assertEqual(testMulTab_3.values[7][7].value, "10")
+
+        # test position 6x4
+        self.assertEqual(testMulTab_3.values[6][4].value, "111")
+
+        # check if mirroring of the matrix works correctly
+        self.assertEqual(testMulTab_3.values[4][6].value, "10")
 
 
 if __name__ == '__main__':
