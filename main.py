@@ -103,7 +103,7 @@ if __name__ == '__main__':
         10000001001,  # 10
     ]
     p = 2
-    e = 8
+    e = 3
 
     start_time = time.time()
     mt = MulTab(p, P(ips[e]))
