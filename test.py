@@ -18,7 +18,7 @@ ips = [
 
 class MyTestCase(unittest.TestCase):
     def test_prim_2_poly_3_7x7(self):
-        testMulTab_3 = MulTab(2, P(ips[e]))
+        testMulTab_3 = MulTab(2, P(ips[3]))
         self.assertEqual(testMulTab_3.values[7][7].value, "10")
 
 
