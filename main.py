@@ -109,6 +109,7 @@ if __name__ == '__main__':
     mt = MulTab(p, P(ips[e]))
     stop_time = time.time()
 
+
     mt.print()
     print("--- %s seconds ---" % (stop_time - start_time))
 

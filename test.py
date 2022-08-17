@@ -24,11 +24,11 @@ class MyTestCase(unittest.TestCase):
         # test position 7x7
         self.assertEqual(testMulTab_3.values[7][7].value, "10")
 
-        # test position 6x4
-        self.assertEqual(testMulTab_3.values[6][4].value, "111")
+        # test position 6x3
+        self.assertEqual(testMulTab_3.values[6][3].value, "111")
 
         # check if mirroring of the matrix works correctly
-        self.assertEqual(testMulTab_3.values[4][6].value, "10")
+        self.assertEqual(testMulTab_3.values[3][6].value, "111")
 
 
 if __name__ == '__main__':
