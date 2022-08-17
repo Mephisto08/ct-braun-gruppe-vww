@@ -1,4 +1,9 @@
+import pandas as pd
 import time
+
+pd.set_option('display.max_columns', None)
+pd.set_option('display.max_rows', None)
+pd.set_option('display.width', None)
 
 
 class P:  # Polynomial
@@ -74,12 +79,13 @@ class MulTab:  # Multiplication Table
         result = mul_p.reduce(self.irreducible_p, self.p)
         return result
 
-    def print(self):
-        for row in self.values:
-            for field in row:
-                # print(self.pad(field.value) + ' ', end='')    # Binary
-                print(str(int(field.value, 2)) + ' ', end='')   # Decimal
-            print()
+    def print(self, bin=False):
+        df = pd.DataFrame(self.values)
+        format = lambda field: int(field.value, 2)  # Decimal
+        if bin:
+            format = lambda field: self.pad(field.value)  # Binary
+        df = df.applymap(format)
+        print(df)
 
     def bin(self, number):
         return self.pad(bin(number)[2:])
@@ -103,12 +109,11 @@ if __name__ == '__main__':
         10000001001,  # 10
     ]
     p = 2
-    e = 3
+    e = 8
 
     start_time = time.time()
     mt = MulTab(p, P(ips[e]))
     stop_time = time.time()
-
 
     mt.print()
     print("--- %s seconds ---" % (stop_time - start_time))
