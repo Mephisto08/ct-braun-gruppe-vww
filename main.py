@@ -58,7 +58,7 @@ class P:  # Polynomial
 
 
 class MulTab:  # Multiplication Table
-    def __init__(self, p, irreducible_p):
+    def __init__(self, irreducible_p, p=2):
         self.p = p
         self.e = len(irreducible_p.value) - 1
         self.irreducible_p = irreducible_p
@@ -66,10 +66,10 @@ class MulTab:  # Multiplication Table
 
     def calc_table(self):
         width = self.p ** self.e
-        result = [[P(self.bin(0))] * width for w in range(width)]  # Initialize two-dimensional array
+        result = [[P(self.to_base(0))] * width for w in range(width)]  # Initialize two-dimensional array
         for i in range(1, width):
             for j in range(i, width):
-                res = self.mul_mod(P(self.bin(i)), P(self.bin(j)))
+                res = self.mul_mod(P(self.to_base(i)), P(self.to_base(j)))
                 result[i][j] = res
                 result[j][i] = res
         return result
@@ -79,13 +79,21 @@ class MulTab:  # Multiplication Table
         result = mul_p.reduce(self.irreducible_p, self.p)
         return result
 
-    def print(self, bin=False):
+    def print(self, raw=False):
         df = pd.DataFrame(self.values)
-        format = lambda field: int(field.value, 2)  # Decimal
-        if bin:
-            format = lambda field: self.pad(field.value)  # Binary
+        format = lambda field: int(field.value, 2)  # Decimal converted
+        if raw:
+            format = lambda field: self.pad(field.value)  # Raw
         df = df.applymap(format)
         print(df)
+
+    def to_base(self, n):
+        base = self.p
+        digits = ""
+        while n:
+            digits = str(int(n % base)) + digits
+            n //= base  # Floor division
+        return self.pad(digits)
 
     def bin(self, number):
         return self.pad(bin(number)[2:])
@@ -108,11 +116,10 @@ if __name__ == '__main__':
         1000010001,  # 9
         10000001001,  # 10
     ]
-    p = 2
     e = 8
 
     start_time = time.time()
-    mt = MulTab(p, P(ips[e]))
+    mt = MulTab(P(ips[e]))
     stop_time = time.time()
 
     mt.print()
