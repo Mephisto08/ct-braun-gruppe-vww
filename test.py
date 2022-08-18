@@ -28,6 +28,16 @@ class MyTestCase(unittest.TestCase):
         # check if mirroring of the matrix works correctly
         self.assertEqual(testMulTab_3.values[3][6].value, "111")
 
+    def test_eea(self):
+        testMulTab_3 = MulTab(P(ips[3]))
+
+        p2 = P(ips[3])
+        for i in range(1, 2 ** 3):
+            p1 = P(bin(i)[2:])
+            gcd, u, v = eea(p1, p2)
+            mul_r = testMulTab_3.mul_mod(p1, u)
+            self.assertEqual(mul_r.value, "1")
+
 
 if __name__ == '__main__':
     unittest.main()
