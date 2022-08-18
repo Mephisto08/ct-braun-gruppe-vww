@@ -5,6 +5,20 @@ pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
 pd.set_option('display.width', None)
 
+ips = [  # Irreducible Polynomial Lookup Table
+    '',
+    '',
+    111,  # 2
+    1101,  # 3
+    11001,  # 4
+    100101,  # 5
+    1100001,  # 6
+    11000001,  # 7
+    100011101,  # 8
+    1000010001,  # 9
+    10000001001,  # 10
+]
+
 
 class P:  # Polynomial
     def __init__(self, value):
@@ -108,17 +122,15 @@ class MulTab:  # Multiplication Table
         if self.e < 2:
             raise ValueError("e cannot be less than 2")
         else:
-            self.values = self.calc_table()
+            self.width = self.p ** self.e
+            self.values = [[P(self.to_base(0))] * self.width for w in range(self.width)]  # Initialize two-dimensional array
 
     def calc_table(self):
-        width = self.p ** self.e
-        result = [[P(self.to_base(0))] * width for w in range(width)]  # Initialize two-dimensional array
-        for i in range(1, width):
-            for j in range(i, width):
+        for i in range(1, self.width):
+            for j in range(i, self.width):
                 res = self.mul_mod(P(self.to_base(i)), P(self.to_base(j)))
-                result[i][j] = res
-                result[j][i] = res
-        return result
+                self.values[i][j] = res
+                self.values[j][i] = res
 
     def mul_mod(self, p1, p2):
         mul_p = p1 * p2
@@ -159,26 +171,15 @@ def eea(p1, p2):
 
 
 if __name__ == '__main__':
-    ips = [
-        '',
-        '',
-        111,  # 2
-        1101,  # 3
-        11001,  # 4
-        100101,  # 5
-        1100001,  # 6
-        11000001,  # 7
-        100011101,  # 8
-        1000010001,  # 9
-        10000001001,  # 10
-    ]
-    e = 3
+    # Choose an e between 2 and 8
+    e = 4
 
     print("\n┎────────────────┒")
     print("┃   Exercise 1   ┃")
     print("┖────────────────┚\n")
     start_time = time.time()
     mt = MulTab(P(ips[e]))
+    mt.calc_table()
     stop_time = time.time()
     mt.print()
     print("\n➜ Took %s seconds\n" % (stop_time - start_time))

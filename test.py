@@ -1,42 +1,29 @@
 import unittest
 from main import *
 
-ips = [
-    None,
-    None,
-    110,  # 2
-    1101,  # 3
-    11001,  # 4
-    100101,  # 5
-    1100001,  # 6
-    11000001,  # 7
-    100011101,  # 8
-    1000010001,  # 9
-    10000001001,  # 10
-]
+
+def test_eea_mulr(test, e):
+    mt = MulTab(P(ips[e]))
+    p2 = P(ips[e])
+    for i in range(1, 2 ** e):
+        p1 = P(bin(i)[2:])
+        gcd, u, v = eea(p1, p2)
+        mul_r = mt.mul_mod(p1, u)
+        test.assertEqual("1", mul_r.value)
 
 
-class MyTestCase(unittest.TestCase):
+class TestCase(unittest.TestCase):
+
     def test_prim_2_poly_3(self):
         testMulTab_3 = MulTab(P(ips[3]))
-        # test position 7x7
-        self.assertEqual(testMulTab_3.values[7][7].value, "10")
-
-        # test position 6x3
-        self.assertEqual(testMulTab_3.values[6][3].value, "111")
-
-        # check if mirroring of the matrix works correctly
-        self.assertEqual(testMulTab_3.values[3][6].value, "111")
+        testMulTab_3.calc_table()
+        self.assertEqual("10", testMulTab_3.values[7][7].value)   # test position 7x7
+        self.assertEqual("111", testMulTab_3.values[6][3].value)  # test position 6x3
+        self.assertEqual("111", testMulTab_3.values[3][6].value)  # check if mirroring of the matrix works correctly
 
     def test_eea(self):
-        testMulTab_3 = MulTab(P(ips[3]))
-
-        p2 = P(ips[3])
-        for i in range(1, 2 ** 3):
-            p1 = P(bin(i)[2:])
-            gcd, u, v = eea(p1, p2)
-            mul_r = testMulTab_3.mul_mod(p1, u)
-            self.assertEqual(mul_r.value, "1")
+        for e in range(2, 8):
+            test_eea_mulr(self, e)
 
 
 if __name__ == '__main__':
