@@ -149,7 +149,6 @@ class MulTab:  # Multiplication Table
 def eea(p1, p2):
     if p1 == P("0"):
         return p2, P("0"), P("1")
-
     gcd, u, v = eea(p2 % p1, p1)
     x = (v - (p2 // p1) * u).abs()
     y = u
@@ -172,22 +171,28 @@ if __name__ == '__main__':
     ]
     e = 3
 
-    print("###########")
-    print("Praktikum 1")
-    print("###########\n")
+    print("┎────────────────┒")
+    print("┃   Exercise 1   ┃")
+    print("┖────────────────┚")
     start_time = time.time()
     mt = MulTab(P(ips[e]))
     stop_time = time.time()
     mt.print()
-    print("--- %s seconds ---\n" % (stop_time - start_time))
+    print("(Took %s seconds)\n" % (stop_time - start_time))
 
-    print("###########")
-    print("Praktikum 2")
-    print("###########\n")
+    print("┎────────────────┒")
+    print("┃   Exercise 2   ┃")
+    print("┖────────────────┚")
+    start_time = time.time()
     p2 = P(ips[e])
+    df = pd.DataFrame()
+    df.index = ['Field element', 'GDC', 'u', 'v', 'mul result']
     for i in range(1, 2**e):
         p1 = P(bin(i)[2:])
         gcd, u, v = eea(p1, p2)
         mul_r = mt.mul_mod(p1, u)
-        print("Field element:", p1.value, "\n\tGDC:", gcd.value, "\n\tu:\t", u.value, "\n\tv:\t", v.value, "\n\tmul_r:\t", mul_r.value, " (Should be 1)\n")
-
+        result = [p1.value, gcd.value, u.value, v.value, mul_r.value]
+        df = df.assign( **{str(i): result})
+    stop_time = time.time()
+    print(df)
+    print("(Took %s seconds)\n" % (stop_time - start_time))
