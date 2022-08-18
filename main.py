@@ -105,7 +105,10 @@ class MulTab:  # Multiplication Table
         self.p = p
         self.e = len(irreducible_p.value) - 1
         self.irreducible_p = irreducible_p
-        self.values = self.calc_table()
+        if self.e < 2:
+            raise ValueError("e cannot be less than 2")
+        else:
+            self.values = self.calc_table()
 
     def calc_table(self):
         width = self.p ** self.e
@@ -124,7 +127,7 @@ class MulTab:  # Multiplication Table
 
     def print(self, raw=False):
         df = pd.DataFrame(self.values)
-        format = lambda field: int(field.value, 2)  # Decimal converted
+        format = lambda field: int(self.pad(field.value), 2)  # Decimal converted
         if raw:
             format = lambda field: self.pad(field.value)  # Raw
         df = df.applymap(format)
@@ -157,9 +160,9 @@ def eea(p1, p2):
 
 if __name__ == '__main__':
     ips = [
-        None,
-        None,
-        110,  # 2
+        '',
+        '',
+        111,  # 2
         1101,  # 3
         11001,  # 4
         100101,  # 5
@@ -171,18 +174,18 @@ if __name__ == '__main__':
     ]
     e = 3
 
-    print("┎────────────────┒")
+    print("\n┎────────────────┒")
     print("┃   Exercise 1   ┃")
-    print("┖────────────────┚")
+    print("┖────────────────┚\n")
     start_time = time.time()
     mt = MulTab(P(ips[e]))
     stop_time = time.time()
     mt.print()
-    print("(Took %s seconds)\n" % (stop_time - start_time))
+    print("\n➜ Took %s seconds\n" % (stop_time - start_time))
 
-    print("┎────────────────┒")
+    print("\n┎────────────────┒")
     print("┃   Exercise 2   ┃")
-    print("┖────────────────┚")
+    print("┖────────────────┚\n")
     start_time = time.time()
     p2 = P(ips[e])
     df = pd.DataFrame()
@@ -195,4 +198,4 @@ if __name__ == '__main__':
         df = df.assign( **{str(i): result})
     stop_time = time.time()
     print(df)
-    print("(Took %s seconds)\n" % (stop_time - start_time))
+    print("\n➜ Took %s seconds\n" % (stop_time - start_time))
