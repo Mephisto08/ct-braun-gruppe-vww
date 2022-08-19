@@ -161,39 +161,41 @@ class MulTab:  # Multiplication Table
 
 
 # Extended Euclidean Algorithm
-def eea(p1, p2):
+def eea(p1, p2, irreducible_p, p):
     if p1 == P("0"):
         return p2, P("0"), P("1")
-    gcd, u, v = eea(p2 % p1, p1)
-    x = (v - (p2 // p1) * u).abs()
+    gcd, u, v = eea(p2 % p1, p1, irreducible_p, p)
+    pfdivmul = ((p2 // p1) * u).reduce(irreducible_p, p)
+    x = (v - pfdivmul).abs()
     y = u
     return gcd, x, y
 
 
 if __name__ == '__main__':
     # Choose an e between 2 and 8
-    e = 4
+    e = 5
 
     print("\n┎────────────────┒")
     print("┃   Exercise 1   ┃")
-    print("┖────────────────┚\n")
+    print("┖────────────────┚")
+    print("e = " + str(e))
     start_time = time.time()
     mt = MulTab(P(ips[e]))
     mt.calc_table()
     stop_time = time.time()
-    mt.print()
+    mt.print(True)
     print("\n➜ Took %s seconds\n" % (stop_time - start_time))
 
     print("\n┎────────────────┒")
     print("┃   Exercise 2   ┃")
-    print("┖────────────────┚\n")
+    print("┖────────────────┚")
+    print("e = " + str(e))
     start_time = time.time()
-    p2 = P(ips[e])
     df = pd.DataFrame()
     df.index = ['Field element', 'GDC', 'u', 'v', 'mul result']
     for i in range(1, 2**e):
         p1 = P(bin(i)[2:])
-        gcd, u, v = eea(p1, p2)
+        gcd, u, v = eea(p1, mt.irreducible_p, mt.irreducible_p, mt.p)
         mul_r = mt.mul_mod(p1, u)
         result = [p1.value, gcd.value, u.value, v.value, mul_r.value]
         df = df.assign( **{str(i): result})

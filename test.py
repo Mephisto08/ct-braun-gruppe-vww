@@ -4,10 +4,9 @@ from main import *
 
 def test_eea_mulr(test, e):
     mt = MulTab(P(ips[e]))
-    p2 = P(ips[e])
     for i in range(1, 2 ** e):
         p1 = P(bin(i)[2:])
-        gcd, u, v = eea(p1, p2)
+        gcd, u, v = eea(p1, mt.irreducible_p, mt.irreducible_p, mt.p)
         mul_r = mt.mul_mod(p1, u)
         test.assertEqual("1", mul_r.value)
 
