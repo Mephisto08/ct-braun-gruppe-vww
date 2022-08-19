@@ -173,7 +173,7 @@ def eea(p1, p2, irreducible_p, p):
 
 if __name__ == '__main__':
     # Choose an e between 2 and 8
-    e = 5
+    e = 4
 
     print("\n┎────────────────┒")
     print("┃   Exercise 1   ┃")
@@ -183,7 +183,7 @@ if __name__ == '__main__':
     mt = MulTab(P(ips[e]))
     mt.calc_table()
     stop_time = time.time()
-    mt.print(True)
+    mt.print()
     print("\n➜ Took %s seconds\n" % (stop_time - start_time))
 
     print("\n┎────────────────┒")
