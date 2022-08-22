@@ -1,5 +1,6 @@
 import pandas as pd
 import time
+import math
 
 pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
@@ -83,6 +84,20 @@ class P:  # Polynomial
     def __mod__(p1, p2):
         mod = (p1 / p2)[1]
         return mod
+
+    def mul(p, factor: int):
+        result = ''
+        for i in range(len(p.value)):
+            pv = int(p.value[i])
+            result += str(int(pv * factor))
+        return P(result)
+
+    def div(p, factor: int):
+        result = ''
+        for i in range(len(p.value)):
+            pv = int(p.value[i])
+            result += str(int(pv / factor))
+        return P(result)
 
     def mod(p, mod: int):
         result = ''
@@ -171,6 +186,57 @@ def eea(p1, p2, irreducible_p, p):
     return gcd, x, y
 
 
+def calc_kgv(a, b):
+    """ calculate the least common multiple """
+    return abs(a*b) // math.gcd(a, b)
+
+
+def print_matrix(m):
+    for p in m:
+        print(p.value)
+
+
+def gauss(gm):
+    kgm = gm
+    pos = 0
+    width = len(gm[0].value)
+
+    for row_pos, row in enumerate(gm[1:]):
+        print("############")
+        print("pos = " + str(pos) + "\n")
+
+        min_kgv = (-1, math.inf)
+        for comp_pos, comp_row in enumerate(gm):
+            if row != comp_row:
+                kgv = calc_kgv(int(row.value[pos]), int(comp_row.value[pos]))
+                if kgv != 0 and abs(kgv) < min_kgv[1]:
+                    min_kgv = (comp_pos, kgv)
+
+                print("row[" + str(pos) + "] = " + str(row.value[pos]))
+                print("comp_row[" + str(pos) + "] = " + str(comp_row.value[pos]))
+                print("KGV(" + str(row.value[pos]) + ", " + str(comp_row.value[pos]) + ") = " + str(kgv))
+                print()
+
+        min_kgv_row = gm[min_kgv[0]]
+        print("min kgv found =>", min_kgv)
+        factor_row = min_kgv[1] / int(row.value[pos])
+        factor_min_kgv_row = min_kgv[1] / int(min_kgv_row.value[pos])
+        print("factor_row", factor_row)
+        print("factor_min_kgv_row", factor_min_kgv_row)
+
+        new_row = row.mul(factor_row) - min_kgv_row.mul(factor_min_kgv_row)
+
+        print("new_row", new_row.value)
+        kgm[row_pos + 1].value = new_row.abs().pad(width)
+
+        print("############\n")
+
+    for i, p in enumerate(kgm):
+        kgm[i] = p.div(int(p.value[i]))
+
+    return kgm
+
+
 if __name__ == '__main__':
     # Choose an e between 2 and 8
     e = 4
@@ -201,4 +267,31 @@ if __name__ == '__main__':
         df = df.assign( **{str(i): result})
     stop_time = time.time()
     print(df)
+    print("\n➜ Took %s seconds\n" % (stop_time - start_time))
+
+    print("\n┎────────────────┒")
+    print("┃   Exercise 3   ┃")
+    print("┖────────────────┚")
+    print("e = " + str(e))
+    start_time = time.time()
+
+
+    gm = [
+        P("334123"),
+        P("233456"),
+        P("222321")
+    ]
+
+    print("\nGM:")
+    print_matrix(gm)
+    print()
+
+    kgm = gauss(gm)
+
+    print("\nKGM:")
+    print_matrix(kgm)
+    print()
+
+
+    stop_time = time.time()
     print("\n➜ Took %s seconds\n" % (stop_time - start_time))
