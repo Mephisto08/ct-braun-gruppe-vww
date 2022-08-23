@@ -138,7 +138,8 @@ class MulTab:  # Multiplication Table
             raise ValueError("e cannot be less than 2")
         else:
             self.width = self.p ** self.e
-            self.values = [[P(self.to_base(0))] * self.width for w in range(self.width)]  # Initialize two-dimensional array
+            self.values = [[P(self.to_base(0))] * self.width for w in
+                           range(self.width)]  # Initialize two-dimensional array
 
     def calc_table(self):
         for i in range(1, self.width):
@@ -188,7 +189,7 @@ def eea(p1, p2, irreducible_p, p):
 
 def calc_kgv(a, b):
     """ calculate the least common multiple """
-    return abs(a*b) // math.gcd(a, b)
+    return abs(a * b) // math.gcd(a, b)
 
 
 def print_matrix(m):
@@ -196,46 +197,38 @@ def print_matrix(m):
         print(p.value)
 
 
-def gauss(gm):
-    kgm = gm
-    pos = 0
-    width = len(gm[0].value)
+def toReducedRowEchelonForm(M):
+    if not M: return
+    lead = 0
+    rowCount = len(M)
+    columnCount = len(M[0].value)
+    for r in range(rowCount):
+        if lead >= columnCount:
+            return
+        i = r
 
-    for row_pos, row in enumerate(gm[1:]):
-        print("############")
-        print("pos = " + str(pos) + "\n")
+        while M[i].value[lead] == "0":
+            i += 1
+            if i == rowCount:
+                i = r
+                lead += 1
+                if columnCount == lead:
+                    return
+        M[i], M[r] = M[r], M[i]
+        lv = M[r].value[lead]
+        M[r] = P(''.join([str(int(int(mrx) / float(lv))) for mrx in M[r].value])) # !VORSICHT
+        for i in range(rowCount):
+            if i != r:
+                lv = M[i].value[lead]
+                M[i] = P(''.join([str(int(iv) - int(lv) * int(rv)) for rv, iv in zip(M[r].value, M[i].value)]))
+        lead += 1
 
-        min_kgv = (-1, math.inf)
-        for comp_pos, comp_row in enumerate(gm):
-            if row != comp_row:
-                kgv = calc_kgv(int(row.value[pos]), int(comp_row.value[pos]))
-                if kgv != 0 and abs(kgv) < min_kgv[1]:
-                    min_kgv = (comp_pos, kgv)
 
-                print("row[" + str(pos) + "] = " + str(row.value[pos]))
-                print("comp_row[" + str(pos) + "] = " + str(comp_row.value[pos]))
-                print("KGV(" + str(row.value[pos]) + ", " + str(comp_row.value[pos]) + ") = " + str(kgv))
-                print()
-
-        min_kgv_row = gm[min_kgv[0]]
-        print("min kgv found =>", min_kgv)
-        factor_row = min_kgv[1] / int(row.value[pos])
-        factor_min_kgv_row = min_kgv[1] / int(min_kgv_row.value[pos])
-        print("factor_row", factor_row)
-        print("factor_min_kgv_row", factor_min_kgv_row)
-
-        new_row = row.mul(factor_row) - min_kgv_row.mul(factor_min_kgv_row)
-
-        print("new_row", new_row.value)
-        kgm[row_pos + 1].value = new_row.abs().pad(width)
-
-        print("############\n")
-
-    for i, p in enumerate(kgm):
-        kgm[i] = p.div(int(p.value[i]))
-
-    return kgm
-
+mtx = [
+        P("111000"),
+        P("101010"),
+        P("110100")
+    ]
 
 if __name__ == '__main__':
     # Choose an e between 2 and 8
@@ -259,12 +252,12 @@ if __name__ == '__main__':
     start_time = time.time()
     df = pd.DataFrame()
     df.index = ['Field element', 'GDC', 'u', 'v', 'mul result']
-    for i in range(1, 2**e):
+    for i in range(1, 2 ** e):
         p1 = P(bin(i)[2:])
         gcd, u, v = eea(p1, mt.irreducible_p, mt.irreducible_p, mt.p)
         mul_r = mt.mul_mod(p1, u)
         result = [p1.value, gcd.value, u.value, v.value, mul_r.value]
-        df = df.assign( **{str(i): result})
+        df = df.assign(**{str(i): result})
     stop_time = time.time()
     print(df)
     print("\n➜ Took %s seconds\n" % (stop_time - start_time))
@@ -275,23 +268,23 @@ if __name__ == '__main__':
     print("e = " + str(e))
     start_time = time.time()
 
-
     gm = [
-        P("334123"),
-        P("233456"),
-        P("222321")
+        P("111000"),
+        P("101010"),
+        P("110100")
     ]
 
     print("\nGM:")
-    print_matrix(gm)
+    # print_matrix(gm)
     print()
 
-    kgm = gauss(gm)
+    toReducedRowEchelonForm(mtx)
+
+    print(mtx)
 
     print("\nKGM:")
-    print_matrix(kgm)
+    # print_matrix(kgm)
     print()
-
 
     stop_time = time.time()
     print("\n➜ Took %s seconds\n" % (stop_time - start_time))
