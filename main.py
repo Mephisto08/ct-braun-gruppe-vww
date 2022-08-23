@@ -115,7 +115,8 @@ class P:  # Polynomial
                 ir_sx = irreducible_p * sx
                 result += ir_sx
                 result = result.mod(p)
-                result.value = result.value.lstrip('0')  # Remove leading zero, since degree got reduced
+                # Remove leading zero, since degree got reduced
+                result.value = result.value.lstrip('0')
                 diff = len(result.value) - len(irreducible_p.value)
                 if diff < 0:
                     break
@@ -155,9 +156,10 @@ class MulTab:  # Multiplication Table
 
     def print(self, raw=False):
         df = pd.DataFrame(self.values)
-        format = lambda field: int(self.pad(field.value), 2)  # Decimal converted
+        def format(field): return int(
+            self.pad(field.value), 2)  # Decimal converted
         if raw:
-            format = lambda field: self.pad(field.value)  # Raw
+            def format(field): return self.pad(field.value)  # Raw
         df = df.applymap(format)
         print(df)
 
@@ -197,14 +199,34 @@ def print_matrix(m):
         print(p.value)
 
 
-def toReducedRowEchelonForm(M):
-    if not M: return
+def gen_em(rows: int):
+    result = []
+    for i in range(rows):
+        result.append(bin(2**(rows-i-1))[2:].zfill(rows))
+    return result
+
+
+def gen_transposed_matrix(m):
+    t_matrix = []
+    for i in range(len(m[0].value)):
+        pol_str = ""
+        for j in range(len(m)):
+            pol_str += m[j].value[i]
+
+        t_matrix.append(P(pol_str))
+
+    return t_matrix
+
+
+def generate_reducedRowEchelonForm(M, e):
+    if not M:
+        return
     lead = 0
     rowCount = len(M)
     columnCount = len(M[0].value)
     for r in range(rowCount):
         if lead >= columnCount:
-            return
+            return M
         i = r
 
         while M[i].value[lead] == "0":
@@ -213,22 +235,80 @@ def toReducedRowEchelonForm(M):
                 i = r
                 lead += 1
                 if columnCount == lead:
-                    return
+                    return M
         M[i], M[r] = M[r], M[i]
         lv = M[r].value[lead]
-        M[r] = P(''.join([str(int(int(mrx) / float(lv))) for mrx in M[r].value])) # !VORSICHT
+        M[r] = P(''.join([str(abs(int(int(mrx) / float(lv))))
+                          for mrx in M[r].value])).mod(e)  # !VORSICHT
         for i in range(rowCount):
             if i != r:
                 lv = M[i].value[lead]
-                M[i] = P(''.join([str(int(iv) - int(lv) * int(rv)) for rv, iv in zip(M[r].value, M[i].value)]))
+                M[i] = P(''.join([str(abs(int(iv) - int(lv) * int(rv)))
+                                  for rv, iv in zip(M[r].value, M[i].value)])).mod(e)
         lead += 1
+    return M
 
 
-mtx = [
-        P("111000"),
-        P("101010"),
-        P("110100")
-    ]
+def generate_control_matrix(g):
+    rowCount = len(g)
+
+    for i in range(rowCount):
+        g[i] = P(g[i].value[rowCount:])
+
+    p_transposed = gen_transposed_matrix(g)
+
+    em = gen_em(len(p_transposed))
+
+    h = []
+    for i in range(len(p_transposed)):
+        h.append(P(p_transposed[i].value + em[i]))
+
+    km = gen_transposed_matrix(h)
+
+    return km
+
+
+def generate_syndrom_table(km):
+    n = len(km)
+    syndrom_table = {}
+
+    syndrom_table['0'*len(km[0].value)] = P('0'*n)
+    for i in range(n):
+        cur_pol = str(bin(2**(i))[2:].zfill(n))
+        syndrom_table[km[len(km)-1-i].value] = P(cur_pol)
+
+    for i in range(2**n):
+        cur_pol = str(bin(i)[2:].zfill(n))
+        temp_pol = P('0'*len(km[0].value))
+        for j in range(n):
+            if cur_pol[j] == '0':
+                continue
+
+            temp_pol += km[j]
+
+        temp_pol = temp_pol.mod(2)
+
+        if temp_pol.value not in syndrom_table:
+            syndrom_table[temp_pol.value] = P(cur_pol)
+
+    return syndrom_table
+
+
+def error_correction_with_syndrom_table(code_polynom, km, syndrom_table):
+    n = len(km)
+
+    syndrom_class = P('0'*len(km[0].value))
+    for j in range(n):
+        if code_polynom.value[j] == '0':
+            continue
+
+        syndrom_class += km[j]
+
+    syndrom_class = syndrom_class.mod(2).value
+    error_polynom = syndrom_table[syndrom_class]
+
+    return syndrom_class, (code_polynom + error_polynom).mod(2)
+
 
 if __name__ == '__main__':
     # Choose an e between 2 and 8
@@ -269,22 +349,38 @@ if __name__ == '__main__':
     start_time = time.time()
 
     gm = [
-        P("111000"),
-        P("101010"),
-        P("110100")
+        P("11010"),
+        P("10101")
     ]
 
-    print("\nGM:")
-    # print_matrix(gm)
+    print("\nGenerator-Matrix:")
+    print_matrix(gm)
     print()
 
-    toReducedRowEchelonForm(mtx)
+    kgm = generate_reducedRowEchelonForm(gm, 2)
 
-    print(mtx)
-
-    print("\nKGM:")
-    # print_matrix(kgm)
+    print("\nKanonische-Generator-Matrix:")
+    print_matrix(kgm)
     print()
+
+    km = generate_control_matrix(kgm)
+
+    print("\nKontroll-Matrix:")
+    print_matrix(km)
+    print()
+
+    syndrom_table = generate_syndrom_table(km)
+
+    print("\nSyndrom Tabelle:\nSyndr.\tError")
+    for key, value in syndrom_table.items():
+        print(key, '\t', value.value)
+    print()
+
+    corrected_codeword = error_correction_with_syndrom_table(
+        P("01101"), km, syndrom_table)
+    print("Syndrom class:", corrected_codeword[0])
+    print("Corrected codeword with syndrom table:",
+          corrected_codeword[1].value)
 
     stop_time = time.time()
     print("\n➜ Took %s seconds\n" % (stop_time - start_time))
