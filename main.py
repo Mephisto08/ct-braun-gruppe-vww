@@ -249,7 +249,8 @@ def generate_reducedRowEchelonForm(M, e):
     return M
 
 
-def generate_control_matrix(g):
+def generate_control_matrix(gm):
+    g = gm.copy()
     rowCount = len(g)
 
     for i in range(rowCount):
@@ -310,6 +311,23 @@ def error_correction_with_syndrom_table(code_polynom, km, syndrom_table):
     return syndrom_class, (code_polynom + error_polynom).mod(2)
 
 
+def calc_g_mul_ht(gm, km):
+    n = len(gm[0].value)
+
+    temp = P('0' * len(km[0].value))
+    for e_gm in gm:
+        for j in range(n):
+            t = e_gm.value[j]
+            if e_gm.value[j] == '0':
+                continue
+
+            temp += km[j]
+
+    result = temp.mod(2).value
+
+    return P(result)
+
+
 if __name__ == '__main__':
     # Choose an e between 2 and 8
     e = 4
@@ -350,7 +368,7 @@ if __name__ == '__main__':
 
     gm = [
         P("11010"),
-        P("10101")
+        P("11010")
     ]
 
     print("\nGenerator-Matrix:")
@@ -381,6 +399,9 @@ if __name__ == '__main__':
     print("Syndrom class:", corrected_codeword[0])
     print("Corrected codeword with syndrom table:",
           corrected_codeword[1].value)
+
+    g_mul_ht_result = calc_g_mul_ht(gm, km)
+    print("G * Ht: ", g_mul_ht_result.value)
 
     stop_time = time.time()
     print("\n➜ Took %s seconds\n" % (stop_time - start_time))
