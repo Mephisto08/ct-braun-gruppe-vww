@@ -2,6 +2,8 @@ import pandas as pd
 import time
 import math
 
+from py import code
+
 pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
 pd.set_option('display.width', None)
@@ -328,6 +330,64 @@ def calc_g_mul_ht(gm, km):
     return P(result)
 
 
+# Aufgabe 4
+def is_power_of_two(n):
+    return (n != 0) and (n & (n-1) == 0)
+
+
+def generate_hamming_control_matrix(m):
+    control_matrix = []
+    for i in range(1, 2**m):
+        if not is_power_of_two(i):
+            item = P(str(bin(i))[2:].zfill(m))
+            control_matrix.append(item)
+
+    for i in gen_em(m):
+        control_matrix.append(P(i))
+
+    return control_matrix
+
+
+def hamming_control_matrix_to_generator_matrix(control_matrix):
+    m = len(control_matrix[0].value)
+
+    generator_matrix = []
+
+    for i in gen_em(len(control_matrix)-m):
+        generator_matrix.append(P(i))
+
+    p_transposed = gen_transposed_matrix(
+        control_matrix[:-m])
+
+    generator_matrix += p_transposed
+
+    return generator_matrix
+
+
+def decode_hamming(codeword, control_matrix):
+    cm_transposed = gen_transposed_matrix(control_matrix)
+
+    # y * H^T berechnen
+    pol_str = ""
+    for i in cm_transposed:
+        sum = 0
+        for j in range(len(codeword.value)):
+            sum += int(codeword.value[j]) * int(i.value[j])
+        pol_str += str(sum)
+
+    y_ht = P(pol_str)
+
+    a = 1
+    for i in y_ht.value:
+        if int(i) > 1:
+            a = int(i)
+            break
+
+    # for i in
+
+    pass
+
+
 if __name__ == '__main__':
     # Choose an e between 2 and 8
     e = 4
@@ -405,3 +465,29 @@ if __name__ == '__main__':
 
     stop_time = time.time()
     print("\n➜ Took %s seconds\n" % (stop_time - start_time))
+
+    print("\n┎────────────────┒")
+    print("┃   Exercise 4   ┃")
+    print("┖────────────────┚")
+
+    # Choose an m greater or equal 3
+    m = 3
+
+    km = generate_hamming_control_matrix(m)
+
+    print("Kontroll-Matrix:")
+    for i in range(len(km[0].value)):
+        for j in km:
+            print(j.value[i], end=' ')
+        print()
+
+    gm = hamming_control_matrix_to_generator_matrix(km)
+
+    print("\nGenerator-Matrix:")
+    for i in range(len(gm[0].value)):
+        for j in gm:
+            print(j.value[i], end=' ')
+        print()
+
+    codeword = P("1101010")
+    corrected_codeword = decode_hamming(codeword, km)
