@@ -49,12 +49,20 @@ class TestCase(unittest.TestCase):
 
     # Aufgabe 1
     def test_multab(self):
+        print("\n┎────────────────┒")
+        print("┃   Exercise 1   ┃")
+        print("┖────────────────┚")
+
         for e in range(2, 9):
             print("Running test_multab with e =", e)
             test_multab_e(self, e)
 
     # Aufgabe 2
     def test_eea(self):
+        print("\n┎────────────────┒")
+        print("┃   Exercise 2   ┃")
+        print("┖────────────────┚")
+
         for e in range(2, 9):
             print("Running test_eea with e =", e)
             test_eea_e(self, e)
@@ -65,16 +73,17 @@ class TestCase(unittest.TestCase):
         P("11010")
     ]
 
-    gm2 = [
-        P("10101"),
-        P("01111")
-    ]
-
     def test_generate_canonical_generator_matrix(self):
+        print("\n┎────────────────┒")
+        print("┃   Exercise 3   ┃")
+        print("┖────────────────┚")
+        print("Running test_generate_canonical_generator_matrix")
+
         kgm = generate_canonical_generator_matrix(self.gm1, 2)
         self.assertEqual(kgm[0].value, "11010")
 
     def test_generate_control_matrix(self):
+        print("Running test_generate_control_matrix")
         kgm = generate_canonical_generator_matrix(self.gm1, 2)
         km = generate_control_matrix(kgm)
         self.assertEqual(km[0].value, "1010")
@@ -84,6 +93,7 @@ class TestCase(unittest.TestCase):
         self.assertEqual(km[4].value, "0001")
 
     def test_generate_syndrom_table(self):
+        print("Running test_generate_syndrom_table")
         kgm = generate_canonical_generator_matrix(self.gm1, 2)
         km = generate_control_matrix(kgm)
         syndrom_table = generate_syndrom_table(km)
@@ -105,15 +115,40 @@ class TestCase(unittest.TestCase):
         self.assertEqual(syndrom_table["1111"].value, "01111")
 
     def test_error_correction_with_syndrom_table(self):
+        print("Running test_error_correction_with_syndrom_table")
         kgm = generate_canonical_generator_matrix(self.gm1, 2)
         km = generate_control_matrix(kgm)
         syndrom_table = generate_syndrom_table(km)
         corrected_codeword = error_correction_with_syndrom_table(
-            P("01101"), km, syndrom_table)
+            P("11110"), km, syndrom_table)
+        self.assertEqual(corrected_codeword[1].value, "11010")
+
+    def test_g_mul_ht(self):
+        print("Running test_g_mul_ht")
+        kgm = generate_canonical_generator_matrix(self.gm1, 2)
+        km = generate_control_matrix(kgm)
+        g_mul_ht_result = calc_g_mul_ht(self.gm1, km)
+        self.assertEqual(g_mul_ht_result.value, "0000")
+
     # Aufgabe 4
+    def test_hamming_codes_m3(self):
+        print("\n┎────────────────┒")
+        print("┃   Exercise 4   ┃")
+        print("┖────────────────┚")
+        print("Running test_hamming_codes_m3 with m = 3")
+        m = 3
+        km_m3 = generate_hamming_control_matrix(m)
+
+        codeword_m3 = P("0101111")
+        corrected_codeword_m3 = decode_hamming(codeword_m3, km_m3)
+        self.assertEqual(corrected_codeword_m3.value, "0001111")
 
     # Aufgabe 5
     def test_reed_muller_code(self):
+        print("\n┎────────────────┒")
+        print("┃   Exercise 5   ┃")
+        print("┖────────────────┚")
+
         print("Running test_reed_muller_code with r = 1, m = 3")
         reed_muller_code = generate_reed_muller_code(1, 3)
         self.assertEqual(reed_muller_code[0].value, "11111111")

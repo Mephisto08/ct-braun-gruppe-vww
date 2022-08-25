@@ -495,7 +495,7 @@ if __name__ == '__main__':
     print()
 
     corrected_codeword = error_correction_with_syndrom_table(
-        P("01101"), km, syndrom_table)
+        P("11110"), km, syndrom_table)
     print("Syndrom class:", corrected_codeword[0])
     print("Corrected codeword with syndrom table:",
           corrected_codeword[1].value)
