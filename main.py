@@ -2,8 +2,6 @@ import pandas as pd
 import time
 import math
 
-from py import code
-
 pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
 pd.set_option('display.width', None)
@@ -503,5 +501,5 @@ if __name__ == '__main__':
     # Choose codeword containing 0 and 1 with length (2^m - 1)
     codeword = P("0101111")
     corrected_codeword = decode_hamming(codeword, km)
-    print("Codeword:", codeword.value)
+    print("Received Codeword:", codeword.value)
     print("Korrigiertes Codeword:", corrected_codeword.value)
