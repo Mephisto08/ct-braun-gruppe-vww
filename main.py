@@ -249,6 +249,15 @@ def generate_reducedRowEchelonForm(M, e):
     return M
 
 
+def generate_canonical_generator_matrix(M, e):
+    rref = generate_reducedRowEchelonForm(M, e)
+    result = []
+    for i in rref:
+        if '1' in i.value:
+            result.append(i)
+    return result
+
+
 def generate_control_matrix(gm):
     g = gm.copy()
     rowCount = len(g)
@@ -466,7 +475,7 @@ if __name__ == '__main__':
     print_matrix(gm)
     print()
 
-    kgm = generate_reducedRowEchelonForm(gm, 2)
+    kgm = generate_canonical_generator_matrix(gm, 2)
 
     print("\nKanonische-Generator-Matrix:")
     print_matrix(kgm)
@@ -532,7 +541,7 @@ if __name__ == '__main__':
 
     # Choose r, m for Reed-Muller-Code construction
     r = 1
-    m = 3
+    m = 5
 
     reed_muller_code = generate_reed_muller_code(r, m)
     print("Generator-Matrix Reed-Muller-Code (r=", r, ", m=", m, "):", sep='')
