@@ -375,17 +375,28 @@ def decode_hamming(codeword, control_matrix):
             sum += int(codeword.value[j]) * int(i.value[j])
         pol_str += str(sum)
 
-    y_ht = P(pol_str)
+    y_ht = P(pol_str).mod(2)
 
-    a = 1
+    # faktor a berechnen
+    a = 0
     for i in y_ht.value:
-        if int(i) > 1:
+        if int(i) > 0:
             a = int(i)
             break
 
-    # for i in
+    # fehler berechnen
+    error = None
+    for i, item in enumerate(gen_transposed_matrix(cm_transposed)):
+        if item.mul(a) == y_ht:
+            error_string = '0'*len(cm_transposed[0].value)
+            error_string = error_string[:i] + str(a) + error_string[i+1:]
+            error = P(error_string)
 
-    pass
+    if error:
+        corrected_codeword = (codeword + error).mod(2)
+        return corrected_codeword
+
+    return codeword
 
 
 if __name__ == '__main__':
@@ -489,5 +500,8 @@ if __name__ == '__main__':
             print(j.value[i], end=' ')
         print()
 
-    codeword = P("1101010")
+    # Choose codeword containing 0 and 1 with length (2^m - 1)
+    codeword = P("0101111")
     corrected_codeword = decode_hamming(codeword, km)
+    print("Codeword:", codeword.value)
+    print("Korrigiertes Codeword:", corrected_codeword.value)
