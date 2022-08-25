@@ -396,6 +396,28 @@ def decode_hamming(codeword, control_matrix):
 
     return codeword
 
+# Aufgabe 5
+
+
+def generate_reed_muller_code(r, m):
+    if r == 0:
+        return [P('1' * 2**m)]
+    elif r > m:
+        return generate_reed_muller_code(m, m)
+
+    rm_1 = generate_reed_muller_code(r, m-1)
+    rm_2 = generate_reed_muller_code(r-1, m-1)
+
+    rm_generator_matrix = []
+
+    for i in range(len(rm_1)):
+        rm_generator_matrix.append(P(rm_1[i].value + rm_1[i].value))
+
+    for i in range(len(rm_2)):
+        rm_generator_matrix.append(P('0' * len(rm_1[0].value) + rm_2[i].value))
+
+    return rm_generator_matrix
+
 
 if __name__ == '__main__':
     # Choose an e between 2 and 8
@@ -503,3 +525,15 @@ if __name__ == '__main__':
     corrected_codeword = decode_hamming(codeword, km)
     print("Received Codeword:", codeword.value)
     print("Korrigiertes Codeword:", corrected_codeword.value)
+
+    print("\n┎────────────────┒")
+    print("┃   Exercise 5   ┃")
+    print("┖────────────────┚")
+
+    # Choose r, m for Reed-Muller-Code construction
+    r = 1
+    m = 3
+
+    reed_muller_code = generate_reed_muller_code(r, m)
+    print("Generator-Matrix Reed-Muller-Code (r=", r, ", m=", m, "):", sep='')
+    print_matrix(reed_muller_code)
