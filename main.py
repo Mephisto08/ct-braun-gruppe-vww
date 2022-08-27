@@ -558,7 +558,7 @@ def generate_reed_solomon_code(e, d):
     print_matrix(vandermonde_matrix)
 
 
-if __name__ == '__main__':
+def exercise1():
     print("\n┎────────────────┒")
     print("┃   Exercise 1   ┃")
     print("┖────────────────┚")
@@ -576,6 +576,8 @@ if __name__ == '__main__':
     mt.print()
     print("\n➜ In %s Sekunden" % (stop_time - start_time))
 
+
+def exercise2():
     print("\n┎────────────────┒")
     print("┃   Exercise 2   ┃")
     print("┖────────────────┚")
@@ -585,6 +587,7 @@ if __name__ == '__main__':
     e = 4
 
     start_time = time.time()
+    mt = MulTab(P(ips[e]))
     df = pd.DataFrame()
     df.index = ['Field element', 'GDC', 'u', 'v', 'mul result']
 
@@ -601,6 +604,8 @@ if __name__ == '__main__':
     print(df)
     print("\n➜ In %s Sekunden" % (stop_time - start_time))
 
+
+def exercise3():
     print("\n┎────────────────┒")
     print("┃   Exercise 3   ┃")
     print("┖────────────────┚")
@@ -640,6 +645,8 @@ if __name__ == '__main__':
     print("Korrigiertes Codeword:", corrected_codeword[1].value)
     print("G * Ht:", g_mul_ht_result.value)
 
+
+def exercise4():
     print("\n┎────────────────┒")
     print("┃   Exercise 4   ┃")
     print("┖────────────────┚")
@@ -672,6 +679,8 @@ if __name__ == '__main__':
     print("\nEmpfangenes Codeword:", codeword.value)
     print("Korrigiertes Codeword:", corrected_codeword.value)
 
+
+def exercise5():
     print("\n┎────────────────┒")
     print("┃   Exercise 5   ┃")
     print("┖────────────────┚")
@@ -689,6 +698,8 @@ if __name__ == '__main__':
     print("\nGenerator-Matrix:")
     print_matrix(reed_muller_code)
 
+
+def exercise6():
     print("\n┎────────────────┒")
     print("┃   Exercise 6   ┃")
     print("┖────────────────┚")
@@ -700,3 +711,11 @@ if __name__ == '__main__':
 
     generate_reed_solomon_code(e, d)
 
+
+if __name__ == '__main__':
+    exercise1()
+    exercise2()
+    exercise3()
+    exercise4()
+    exercise5()
+    exercise6()
