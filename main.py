@@ -196,7 +196,9 @@ def calc_kgv(a, b):
 
 def print_matrix(m):
     for p in m:
-        print(p.value)
+        for c in p.value:
+            print(c + ' ', end='')
+        print()
 
 
 def gen_em(rows: int):
@@ -405,9 +407,8 @@ def decode_hamming(codeword, control_matrix):
 
     return codeword
 
+
 # Aufgabe 5
-
-
 def generate_reed_muller_code(r, m):
     if r == 0:
         return [P('1' * 2**m)]
@@ -428,100 +429,239 @@ def generate_reed_muller_code(r, m):
     return rm_generator_matrix
 
 
-if __name__ == '__main__':
-    # Choose an e between 2 and 8
-    e = 4
+# Aufgabe 6
+def determine_primitive_element(q):
+    gf_target = [x for x in range(1, q)]
 
+    for alpha in range(q):
+        gf_without_zero = []
+        for i in range(q-1): # 0 <= i <= q-2
+            gf_without_zero.append((alpha ** i) % q)
+
+        if set(gf_without_zero) == set(gf_target):
+            return alpha
+
+    return None
+
+
+def add_with_mod(p1, p2, q):
+    width = max(len(p1.value), len(p2.value))
+    p1, p2 = p1.pad(width), p2.pad(width)
+    result = ''
+    for i in range(width):
+        pv1, pv2 = int(p1[i]), int(p2[i])
+        result += str((pv1 + pv2) % q)
+    return P(result)
+
+
+def mul_with_mod(p1, p2, q):
+    pl1, pl2 = len(p1.value), len(p2.value)
+    width = pl1 + pl2 - 1
+    result = [0] * width
+    for i in range(pl1):
+        for j in range(pl2):
+            pv1, pv2 = int(p1.value[i]), int(p2.value[j])
+            result[i + j] = (result[i + j] + (pv1 * pv2) % q) % q
+    result = ''.join(str(x) for x in result)  # List to string
+    result = result.lstrip('0')  # Remove leading zeros
+    return P(result or '0')
+
+
+def generate_reed_solomon_generator_polynom(alpha, q, d):
+    g_list = []
+    for i in range(1, d): # 1 <= i <= d-1
+        value = -(alpha ** i) % q
+        p = P('1' + str(value))
+        g_list.append(p)
+
+    result_polynom = P('1')
+    for i in range(len(g_list)):
+        result_polynom = mul_with_mod(result_polynom, g_list[i], q)
+
+    return result_polynom
+
+
+def generate_reed_solomon_control_polynom(alpha, q, d):
+    g_list = [P('1' + str(-1 % q))]
+    for i in range(d, q-1): # d <= i <= q-2
+        value = -(alpha ** i) % q
+        p = P('1' + str(value))
+        g_list.append(p)
+
+    result_polynom = P('1')
+    for i in range(len(g_list)):
+        result_polynom = mul_with_mod(result_polynom, g_list[i], q)
+
+    return result_polynom
+
+
+def generate_reed_solomon_control_matrix(control_polynom, d):
+    H = []
+    max = d-1
+    for i in range(d-1):
+        pol_str = ('0' * i) + control_polynom.value + ('0' * (max-i-1))
+        H.append(P(pol_str))
+    return H
+
+
+def generate_reed_solomon_generator_matrix(generator_polynom, q, d):
+    inverted_gp_string = generator_polynom.value[::-1]
+    n = q-1
+
+    G = []
+    max = n - len(inverted_gp_string) + 1
+    for i in range(max):
+        pol_str = ('0' * i) + inverted_gp_string + ('0' * (max-i-1))
+        G.append(P(pol_str))
+    return G
+
+
+def generate_reed_solomon_vandermonde_matrix(polynom, q):
+    n = len(polynom.value)
+    m = n
+
+    V = []
+    for i in range(0, m):  # 0 <= i <= m-1
+        p_string = ''
+        for j in range(n):  # 0 <= j <= n-1
+            value = (int(polynom.value[i]) ** j) % q
+            p_string += str(value)
+        V.append(P(p_string))
+
+    return V
+
+
+def generate_reed_solomon_code(e, d):
+    q = 7  # 2 ** e   VOR ABGABE ÄNDERN!
+    alpha = determine_primitive_element(q)
+    generator_polynom = generate_reed_solomon_generator_polynom(alpha, q, d)
+    generator_matrix = generate_reed_solomon_generator_matrix(generator_polynom, q, d)
+    control_polynom = generate_reed_solomon_control_polynom(alpha, q, d)
+    control_matrix = generate_reed_solomon_control_matrix(control_polynom, d)
+    vandermonde_matrix = generate_reed_solomon_vandermonde_matrix(generator_polynom, q)
+
+    print("e:", e)
+    print("d:", d)
+    print("q:", q)
+
+    print("\nAlpha:", alpha)
+    print("Generator-Polynom:", generator_polynom.value)
+    print("Kontroll-Polynom:", control_polynom.value)
+
+    print("\nGenerator-Matrix:")
+    print_matrix(generator_matrix)
+
+    print("\nKontroll-Matrix:")
+    print_matrix(control_matrix)
+
+    print("\nVandermonde-Matrix:")
+    print_matrix(vandermonde_matrix)
+
+
+if __name__ == '__main__':
     print("\n┎────────────────┒")
     print("┃   Exercise 1   ┃")
     print("┖────────────────┚")
-    print("e = " + str(e))
+    print("» Multiplikationstabelle «")
+
+    # Choose an e between 2 and 8
+    e = 4
+
     start_time = time.time()
     mt = MulTab(P(ips[e]))
     mt.calc_table()
     stop_time = time.time()
+
+    print("e: ", e, "\n")
     mt.print()
-    print("\n➜ Took %s seconds\n" % (stop_time - start_time))
+    print("\n➜ In %s Sekunden" % (stop_time - start_time))
 
     print("\n┎────────────────┒")
     print("┃   Exercise 2   ┃")
     print("┖────────────────┚")
-    print("e = " + str(e))
+    print("» Erweiterter Euklidischer Algorithmus «")
+
+    # Choose an e between 2 and 8
+    e = 4
+
     start_time = time.time()
     df = pd.DataFrame()
     df.index = ['Field element', 'GDC', 'u', 'v', 'mul result']
+
     for i in range(1, 2 ** e):
         p1 = P(bin(i)[2:])
         gcd, u, v = eea(p1, mt.irreducible_p, mt.irreducible_p, mt.p)
         mul_r = mt.mul_mod(p1, u)
         result = [p1.value, gcd.value, u.value, v.value, mul_r.value]
         df = df.assign(**{str(i): result})
+
     stop_time = time.time()
+
+    print("e: ", e, "\n")
     print(df)
-    print("\n➜ Took %s seconds\n" % (stop_time - start_time))
+    print("\n➜ In %s Sekunden" % (stop_time - start_time))
 
     print("\n┎────────────────┒")
     print("┃   Exercise 3   ┃")
     print("┖────────────────┚")
-    print("e = " + str(e))
-    start_time = time.time()
+    print("» Linearer-Code «\n")
 
+    # Choose generator matrix
     gm = [
         P("11010"),
         P("11010")
     ]
 
-    print("\nGenerator-Matrix:")
-    print_matrix(gm)
-    print()
+    # Choose received codeword
+    codeword = P("11110")
 
     kgm = generate_canonical_generator_matrix(gm, 2)
+    km = generate_control_matrix(kgm)
+    syndrom_table = generate_syndrom_table(km)
+
+    corrected_codeword = error_correction_with_syndrom_table(codeword, km, syndrom_table)
+    g_mul_ht_result = calc_g_mul_ht(gm, km)
+
+    print("Generator-Matrix:")
+    print_matrix(gm)
 
     print("\nKanonische-Generator-Matrix:")
     print_matrix(kgm)
-    print()
-
-    km = generate_control_matrix(kgm)
 
     print("\nKontroll-Matrix:")
     print_matrix(km)
-    print()
-
-    syndrom_table = generate_syndrom_table(km)
 
     print("\nSyndrom Tabelle:\nSyndr.\tError")
     for key, value in syndrom_table.items():
-        print(key, '\t', value.value)
-    print()
+        print(key, '\t', value.value, sep='')
 
-    corrected_codeword = error_correction_with_syndrom_table(
-        P("11110"), km, syndrom_table)
-    print("Syndrom class:", corrected_codeword[0])
-    print("Corrected codeword with syndrom table:",
-          corrected_codeword[1].value)
-
-    g_mul_ht_result = calc_g_mul_ht(gm, km)
-    print("G * Ht: ", g_mul_ht_result.value)
-
-    stop_time = time.time()
-    print("\n➜ Took %s seconds\n" % (stop_time - start_time))
+    print("\nEmpfangenes Codeword:", codeword.value)
+    print("Syndrom Klasse:", corrected_codeword[0])
+    print("Korrigiertes Codeword:", corrected_codeword[1].value)
+    print("G * Ht:", g_mul_ht_result.value)
 
     print("\n┎────────────────┒")
     print("┃   Exercise 4   ┃")
     print("┖────────────────┚")
+    print("» Hamming-Code «")
 
     # Choose an m greater or equal 3
     m = 3
 
-    km = generate_hamming_control_matrix(m)
+    # Choose received codeword containing 0 and 1 with length (2^m - 1)
+    codeword = P("0101111")
 
-    print("Kontroll-Matrix:")
+    km = generate_hamming_control_matrix(m)
+    gm = hamming_control_matrix_to_generator_matrix(km)
+    corrected_codeword = decode_hamming(codeword, km)
+
+    print("m:", m)
+
+    print("\nKontroll-Matrix:")
     for i in range(len(km[0].value)):
         for j in km:
             print(j.value[i], end=' ')
         print()
-
-    gm = hamming_control_matrix_to_generator_matrix(km)
 
     print("\nGenerator-Matrix:")
     for i in range(len(gm[0].value)):
@@ -529,20 +669,34 @@ if __name__ == '__main__':
             print(j.value[i], end=' ')
         print()
 
-    # Choose codeword containing 0 and 1 with length (2^m - 1)
-    codeword = P("0101111")
-    corrected_codeword = decode_hamming(codeword, km)
-    print("Received Codeword:", codeword.value)
+    print("\nEmpfangenes Codeword:", codeword.value)
     print("Korrigiertes Codeword:", corrected_codeword.value)
 
     print("\n┎────────────────┒")
     print("┃   Exercise 5   ┃")
     print("┖────────────────┚")
+    print("» Reed-Muller-Code «")
 
     # Choose r, m for Reed-Muller-Code construction
     r = 1
     m = 5
 
     reed_muller_code = generate_reed_muller_code(r, m)
-    print("Generator-Matrix Reed-Muller-Code (r=", r, ", m=", m, "):", sep='')
+
+    print("r:", r)
+    print("m:", m)
+
+    print("\nGenerator-Matrix:")
     print_matrix(reed_muller_code)
+
+    print("\n┎────────────────┒")
+    print("┃   Exercise 6   ┃")
+    print("┖────────────────┚")
+    print("» Reed-Solomon-Code «")
+
+    # Choose e, d for Reed-Solomon-Code construction with q = 2^e
+    e = 3
+    d = 5
+
+    generate_reed_solomon_code(e, d)
+
