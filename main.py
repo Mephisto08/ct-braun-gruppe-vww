@@ -620,15 +620,15 @@ def exercise3():
     # Choose received codeword
     codeword = P("11110")
 
+    print("Generator-Matrix:")
+    print_matrix(gm)
+
     kgm = generate_canonical_generator_matrix(gm, 2)
     km = generate_control_matrix(kgm)
     syndrom_table = generate_syndrom_table(km)
 
     corrected_codeword = error_correction_with_syndrom_table(codeword, km, syndrom_table)
     g_mul_ht_result = calc_g_mul_ht(gm, km)
-
-    print("Generator-Matrix:")
-    print_matrix(gm)
 
     print("\nKanonische-Generator-Matrix:")
     print_matrix(kgm)
