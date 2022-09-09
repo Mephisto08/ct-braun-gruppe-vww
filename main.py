@@ -25,6 +25,12 @@ class P:  # Polynomial
     def __init__(self, value):
         self.value = str(value)
 
+    def __repr__(self):
+        return self.value
+
+    def __len__(self):
+        return len(self.value)
+
     def __eq__(p1, p2):
         p1 = p1.value.lstrip('0')  # Remove leading zeros
         p2 = p2.value.lstrip('0')
@@ -201,40 +207,33 @@ def print_matrix(m):
         print()
 
 
-def print_dec_matrix(m):
-    for p in m:
-        for c in p:
-            print(c + ' ', end='')
-        print()
-
-
-def dec_to_bin_pol(e, dec):
+def dec_to_bin(e, dec_pol):
     binary = ""
-    for d in dec:
+    for d in dec_pol.value:
         b = bin(int(d))[2:].zfill(e)
         binary += b
     return P(binary)
 
 
-def dec_array_to_bin_pol_array(e, dec_array):
-    bin_pol_array = []
+def dec_array_to_bin_array(e, dec_array):
+    bin_array = []
     for d in dec_array:
-        p = dec_to_bin_pol(e, d)
-        bin_pol_array.append(p)
-    return bin_pol_array
+        b = dec_to_bin(e, d)
+        bin_array.append(b)
+    return bin_array
 
 
-def bin_pol_to_dec(e, bin_pol):
+def bin_to_dec(e, bin_pol):
     dec = ""
     for i in range(0, len(bin_pol.value), e):
         dec += str(int(bin_pol.value[i:i+e], 2))
-    return dec
+    return P(dec)
 
 
-def bin_pol_array_to_dec_array(e, bin_pol_array):
+def bin_array_to_dec_array(e, bin_array):
     dec_array = []
-    for p in bin_pol_array:
-        d = bin_pol_to_dec(e, p)
+    for p in bin_array:
+        d = bin_to_dec(e, p)
         dec_array.append(d)
     return dec_array
 
@@ -248,12 +247,12 @@ def gen_em(rows: int):
 
 def gen_transposed_matrix(m):
     t_matrix = []
-    for i in range(len(m[0])):
+    for i in range(len(m[0].value)):
         pol_str = ""
         for j in range(len(m)):
-            pol_str += m[j][i]
+            pol_str += m[j].value[i]
 
-        t_matrix.append(pol_str)
+        t_matrix.append(P(pol_str))
 
     return t_matrix
 
@@ -303,7 +302,7 @@ def generate_control_matrix(gm):
     rowCount = len(g)
 
     for i in range(rowCount):
-        g[i] = g[i][rowCount:]
+        g[i] = P(g[i].value[rowCount:])
 
     p_transposed = gen_transposed_matrix(g)
 
@@ -311,22 +310,29 @@ def generate_control_matrix(gm):
 
     h = []
     for i in range(len(p_transposed)):
-        h.append(p_transposed[i] + em[i])
+        h.append(P(p_transposed[i].value + em[i]))
 
     km = gen_transposed_matrix(h)
 
     return km
 
 
+def p_mul_matrix(p, m):
+    for i in range(len(p)):
+        pm = m[i].mul(p.value[i])
+        print(pm)
+
+
 def generate_syndrom_table(km, q):
     n = len(km)
     syndrom_table = {}
 
-    syndrom_table['0'*len(km[0])] = '0'*n
+    syndrom_table['0'*len(km[0].value)] = P('0'*n)
     for i in range(n):
-        for j in range(q):
-            cur_pol = str(bin(2**(i))[2:].zfill(n))
-            syndrom_table[km[len(km)-1-i]] = P(cur_pol)
+        for j in range(1, q):
+            cur_pol = P((str(j) + ('0' * i)).zfill(n))
+            s = p_mul_matrix(cur_pol, km)
+            syndrom_table[km[len(km)-1-i]] = cur_pol
 
     for i in range(2**n):
         cur_pol = str(bin(i)[2:].zfill(n))
@@ -654,42 +660,42 @@ def exercise3():
 
     # Choose generator matrix
     gm = [
-        "10111",
-        "01123"
+        P("10111"),
+        P("01123")
     ]
 
     # Choose received codeword
-    codeword = "11110"
+    codeword = P("11110")
 
     n = len(gm[0])
     print("GF(2^" + str(e) + ")^" + str(n) + " = GF(" + str(2 ** e) + ")^" + str(n))
     print("\nGenerator-Matrix:")
-    print_dec_matrix(gm)
+    print_matrix(gm)
     print("\nGenerator-Matrix (Binär):")
-    print_matrix(dec_array_to_bin_pol_array(e, gm))
+    print_matrix(dec_array_to_bin_array(e, gm))
 
-    gm = dec_array_to_bin_pol_array(e, gm)
-    codeword = dec_to_bin_pol(e, codeword)
+    gm = dec_array_to_bin_array(e, gm)
+    codeword = dec_to_bin(e, codeword)
 
     # kanonische
     kgm = generate_canonical_generator_matrix(gm, 2)
-    dec_kgm = bin_pol_array_to_dec_array(e, kgm)
+    dec_kgm = bin_array_to_dec_array(e, kgm)
 
     # kontroll
     km = generate_control_matrix(dec_kgm)
-    dec_km = dec_array_to_bin_pol_array(e, km)
+    dec_km = dec_array_to_bin_array(e, km)
 
     syndrom_table = generate_syndrom_table(km, 2**e)
     syndrom_class, corrected_codeword = error_correction_with_syndrom_table(codeword, km, syndrom_table)
     g_mul_ht_result = calc_g_mul_ht(gm, km)
 
     print("\nKanonische-Generator-Matrix:")
-    print_dec_matrix(bin_pol_array_to_dec_array(e, kgm))
+    print_matrix(bin_array_to_dec_array(e, kgm))
     print("\nKanonische-Generator-Matrix (Binär):")
     print_matrix(kgm)
 
     print("\nKontroll-Matrix:")
-    print_dec_matrix(bin_pol_array_to_dec_array(e, km))
+    print_matrix(bin_array_to_dec_array(e, km))
     print("\nKontroll-Matrix (Binär):")
     print_matrix(km)
 
@@ -698,9 +704,9 @@ def exercise3():
         print(key, '\t', value.value, sep='')
 
     print("\nSyndrom Klasse:", syndrom_class)
-    print("Empfangenes Codeword:", bin_pol_to_dec(e, codeword), "(Binär: " + str(codeword.value) + ")")
-    print("Korrigiertes Codeword:", bin_pol_to_dec(e, corrected_codeword), "(Binär: " + str(corrected_codeword.value) + ")")
-    print("G * Ht:", bin_pol_to_dec(e, g_mul_ht_result), "(Binär: " + str(g_mul_ht_result.value) + ")")
+    print("Empfangenes Codeword:", bin_to_dec(e, codeword), "(Binär: " + str(codeword.value) + ")")
+    print("Korrigiertes Codeword:", bin_to_dec(e, corrected_codeword), "(Binär: " + str(corrected_codeword.value) + ")")
+    print("G * Ht:", bin_to_dec(e, g_mul_ht_result), "(Binär: " + str(g_mul_ht_result.value) + ")")
 
 
 def exercise4():
