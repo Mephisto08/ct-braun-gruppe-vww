@@ -1,4 +1,5 @@
 import pandas as pd
+import itertools
 import time
 import math
 
@@ -337,25 +338,30 @@ def generate_syndrom_table(km, e, mt):
             syndrom_table[syndrom] = cur_pol
 
     # generate remaining errors
-    for i in range(q**n):
-        cur_pol = P(str(bin(i)[2:].zfill(n*e)))
-        cur_pol_dec = bin_to_dec(e, cur_pol)
-        temp_pol = P('0'*len(km[0].value * e))
+    for error_count in range(2, n + 1):
+        for error_index_list in itertools.combinations(list(range(n)), error_count):
+            for error_value_list in itertools.product(list(range(1, q)), repeat=error_count):
+                error_string = "0" * n
+                for error_value_pos, error_index in enumerate(error_index_list):
+                    error_string = error_string[:error_index] + str(error_value_list[error_value_pos]) + error_string[error_index + 1:]
 
-        for j in range(n):
-            if cur_pol_dec.value[j] != '0':
-                syndrom = ""
-                for k in range(len(km[0])):
-                    teil_syndrom = str(
-                        mt.values[int(km[j].value[k])][int(cur_pol_dec.value[j])]).zfill(e)
-                    syndrom += str(teil_syndrom)
+                cur_pol_dec = P(error_string[::-1])
+                temp_pol = P('0'*len(km[0].value * e))
 
-                temp_pol = (temp_pol + P(syndrom))
+                for j in range(n):
+                    if cur_pol_dec.value[j] != '0':
+                        syndrom = ""
+                        for k in range(len(km[0])):
+                            teil_syndrom = str(
+                                mt.values[int(km[j].value[k])][int(cur_pol_dec.value[j])]).zfill(e)
+                            syndrom += str(teil_syndrom)
 
-        temp_pol = temp_pol.mod(2)
-        temp_pol_dec = bin_to_dec(e, temp_pol)
-        if temp_pol_dec.value not in syndrom_table:
-            syndrom_table[temp_pol_dec.value] = P(cur_pol_dec)
+                        temp_pol = (temp_pol + P(syndrom))
+
+                temp_pol = temp_pol.mod(2)
+                temp_pol_dec = bin_to_dec(e, temp_pol)
+                if temp_pol_dec.value not in syndrom_table:
+                    syndrom_table[temp_pol_dec.value] = P(cur_pol_dec)
 
     return syndrom_table
 
