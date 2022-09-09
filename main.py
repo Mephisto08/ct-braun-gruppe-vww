@@ -248,12 +248,12 @@ def gen_em(rows: int):
 
 def gen_transposed_matrix(m):
     t_matrix = []
-    for i in range(len(m[0].value)):
+    for i in range(len(m[0])):
         pol_str = ""
         for j in range(len(m)):
-            pol_str += m[j].value[i]
+            pol_str += m[j][i]
 
-        t_matrix.append(P(pol_str))
+        t_matrix.append(pol_str)
 
     return t_matrix
 
@@ -303,7 +303,7 @@ def generate_control_matrix(gm):
     rowCount = len(g)
 
     for i in range(rowCount):
-        g[i] = P(g[i].value[rowCount:])
+        g[i] = g[i][rowCount:]
 
     p_transposed = gen_transposed_matrix(g)
 
@@ -311,21 +311,22 @@ def generate_control_matrix(gm):
 
     h = []
     for i in range(len(p_transposed)):
-        h.append(P(p_transposed[i].value + em[i]))
+        h.append(p_transposed[i] + em[i])
 
     km = gen_transposed_matrix(h)
 
     return km
 
 
-def generate_syndrom_table(km):
+def generate_syndrom_table(km, q):
     n = len(km)
     syndrom_table = {}
 
-    syndrom_table['0'*len(km[0].value)] = P('0'*n)
+    syndrom_table['0'*len(km[0])] = '0'*n
     for i in range(n):
-        cur_pol = str(bin(2**(i))[2:].zfill(n))
-        syndrom_table[km[len(km)-1-i].value] = P(cur_pol)
+        for j in range(q):
+            cur_pol = str(bin(2**(i))[2:].zfill(n))
+            syndrom_table[km[len(km)-1-i]] = P(cur_pol)
 
     for i in range(2**n):
         cur_pol = str(bin(i)[2:].zfill(n))
@@ -471,7 +472,7 @@ def generate_reed_muller_code(r, m):
 def determine_primitive_element(q):
     gf_target = [x for x in range(1, q)]
 
-    for alpha in range(q):
+    for alpha in range(1, q):
         gf_without_zero = []
         for i in range(q-1): # 0 <= i <= q-2
             gf_without_zero.append((alpha ** i) % q)
@@ -570,30 +571,29 @@ def generate_reed_solomon_vandermonde_matrix(polynom, q):
 
 
 def generate_reed_solomon_code(e, d):
-    q = 7  # 2 ** e   VOR ABGABE ÄNDERN!
-    alpha = determine_primitive_element(q)
-    generator_polynom = generate_reed_solomon_generator_polynom(alpha, q, d)
-    generator_matrix = generate_reed_solomon_generator_matrix(generator_polynom, q, d)
-    control_polynom = generate_reed_solomon_control_polynom(alpha, q, d)
-    control_matrix = generate_reed_solomon_control_matrix(control_polynom, d)
-    vandermonde_matrix = generate_reed_solomon_vandermonde_matrix(generator_polynom, q)
+    alpha = determine_primitive_element(2**e)
+
+    #generator_polynom = generate_reed_solomon_generator_polynom(alpha, q, d)
+    #generator_matrix = generate_reed_solomon_generator_matrix(generator_polynom, q, d)
+    #control_polynom = generate_reed_solomon_control_polynom(alpha, q, d)
+    #control_matrix = generate_reed_solomon_control_matrix(control_polynom, d)
+    #vandermonde_matrix = generate_reed_solomon_vandermonde_matrix(generator_polynom, q)
 
     print("e:", e)
     print("d:", d)
-    print("q:", q)
 
-    print("\nAlpha:", alpha)
-    print("Generator-Polynom:", generator_polynom.value)
-    print("Kontroll-Polynom:", control_polynom.value)
+    #print("\nAlpha:", alpha)
+    #print("Generator-Polynom:", generator_polynom.value)
+    #print("Kontroll-Polynom:", control_polynom.value)
 
-    print("\nGenerator-Matrix:")
-    print_matrix(generator_matrix)
+    #print("\nGenerator-Matrix:")
+    #print_matrix(generator_matrix)
 
-    print("\nKontroll-Matrix:")
-    print_matrix(control_matrix)
+    #print("\nKontroll-Matrix:")
+    #print_matrix(control_matrix)
 
-    print("\nVandermonde-Matrix:")
-    print_matrix(vandermonde_matrix)
+    #print("\nVandermonde-Matrix:")
+    #print_matrix(vandermonde_matrix)
 
 
 def exercise1():
@@ -650,12 +650,12 @@ def exercise3():
     print("» Linearer-Code «\n")
 
     # Choose an e between 2 and 8
-    e = 1
+    e = 2
 
     # Choose generator matrix
     gm = [
-        "11010",
-        "11010"
+        "10111",
+        "01123"
     ]
 
     # Choose received codeword
@@ -671,9 +671,15 @@ def exercise3():
     gm = dec_array_to_bin_pol_array(e, gm)
     codeword = dec_to_bin_pol(e, codeword)
 
+    # kanonische
     kgm = generate_canonical_generator_matrix(gm, 2)
-    km = generate_control_matrix(kgm)
-    syndrom_table = generate_syndrom_table(km)
+    dec_kgm = bin_pol_array_to_dec_array(e, kgm)
+
+    # kontroll
+    km = generate_control_matrix(dec_kgm)
+    dec_km = dec_array_to_bin_pol_array(e, km)
+
+    syndrom_table = generate_syndrom_table(km, 2**e)
     syndrom_class, corrected_codeword = error_correction_with_syndrom_table(codeword, km, syndrom_table)
     g_mul_ht_result = calc_g_mul_ht(gm, km)
 
@@ -757,16 +763,16 @@ def exercise6():
     print("» Reed-Solomon-Code «")
 
     # Choose e, d for Reed-Solomon-Code construction with q = 2^e
-    e = 3
+    e = 2
     d = 5
 
     generate_reed_solomon_code(e, d)
 
 
 if __name__ == '__main__':
-    exercise1()
-    exercise2()
+    #exercise1()
+    #exercise2()
     exercise3()
-    exercise4()
-    exercise5()
-    exercise6()
+    #exercise4()
+    #exercise5()
+    #exercise6()
