@@ -343,7 +343,8 @@ def generate_syndrom_table(km, e, mt):
             for error_value_list in itertools.product(list(range(1, q)), repeat=error_count):
                 error_string = "0" * n
                 for error_value_pos, error_index in enumerate(error_index_list):
-                    error_string = error_string[:error_index] + str(error_value_list[error_value_pos]) + error_string[error_index + 1:]
+                    error_string = error_string[:error_index] + str(
+                        error_value_list[error_value_pos]) + error_string[error_index + 1:]
 
                 cur_pol_dec = P(error_string[::-1])
                 temp_pol = P('0'*len(km[0].value * e))
@@ -497,13 +498,24 @@ def generate_reed_muller_code(r, m):
 
 
 # Aufgabe 6
-def determine_primitive_element(q):
+def determine_primitive_element(q, mt):
     gf_target = [x for x in range(1, q)]
 
     for alpha in range(1, q):
         gf_without_zero = []
         for i in range(q-1):  # 0 <= i <= q-2
-            gf_without_zero.append((alpha ** i) % q)
+            if i == 0:
+                gf_without_zero.append(1)
+                continue
+            elif i == 1:
+                gf_without_zero.append(alpha)
+                continue
+
+            result = P(str(bin(alpha))[2:])
+            for x in range(i-1):
+                result = mt.mul_mod(result, P(str(bin(alpha)[2:])))
+
+            gf_without_zero.append(int(int(result.value, 2)))
 
         if set(gf_without_zero) == set(gf_target):
             return alpha
@@ -521,43 +533,53 @@ def add_with_mod(p1, p2, q):
     return P(result)
 
 
-def mul_with_mod(p1, p2, q):
+def mul_bin(p1, p2, mt, q):
     pl1, pl2 = len(p1.value), len(p2.value)
     width = pl1 + pl2 - 1
     result = [0] * width
     for i in range(pl1):
         for j in range(pl2):
             pv1, pv2 = int(p1.value[i]), int(p2.value[j])
-            result[i + j] = (result[i + j] + (pv1 * pv2) % q) % q
+            r = int(mt.mul_mod(P(str(bin(pv1)[2:])), P(
+                str(bin(pv2)[2:]))).value, 2)
+            result[i + j] = (result[i + j] + r) % q
     result = ''.join(str(x) for x in result)  # List to string
     result = result.lstrip('0')  # Remove leading zeros
     return P(result or '0')
 
 
-def generate_reed_solomon_generator_polynom(alpha, q, d):
+def generate_reed_solomon_generator_polynom(alpha, q, d, mt):
     g_list = []
     for i in range(1, d):  # 1 <= i <= d-1
-        value = -(alpha ** i) % q
-        p = P('1' + str(value))
+        # nicht -(alpha ** i), da selbstinversiv in q=2**e
+        value = P(str(bin(alpha))[2:])
+        for x in range(i-1):
+            value = mt.mul_mod(value, P(str(bin(alpha)[2:])))
+
+        p = P('1' + str(int(value.value, 2)))
         g_list.append(p)
 
     result_polynom = P('1')
     for i in range(len(g_list)):
-        result_polynom = mul_with_mod(result_polynom, g_list[i], q)
+        result_polynom = mul_bin(result_polynom, g_list[i], mt, q)
 
     return result_polynom
 
 
-def generate_reed_solomon_control_polynom(alpha, q, d):
-    g_list = [P('1' + str(-1 % q))]
+def generate_reed_solomon_control_polynom(alpha, q, d, mt):
+    g_list = [P('11')]  # (1 - alpha**0)
     for i in range(d, q-1):  # d <= i <= q-2
-        value = -(alpha ** i) % q
-        p = P('1' + str(value))
+        # nicht -(alpha ** i), da selbstinversiv in q=2**e
+        value = P(str(bin(alpha))[2:])
+        for x in range(i-1):
+            value = mt.mul_mod(value, P(str(bin(alpha)[2:])))
+
+        p = P('1' + str(int(value.value, 2)))
         g_list.append(p)
 
     result_polynom = P('1')
     for i in range(len(g_list)):
-        result_polynom = mul_with_mod(result_polynom, g_list[i], q)
+        result_polynom = mul_bin(result_polynom, g_list[i], mt, q)
 
     return result_polynom
 
@@ -583,7 +605,7 @@ def generate_reed_solomon_generator_matrix(generator_polynom, q, d):
     return G
 
 
-def generate_reed_solomon_vandermonde_matrix(polynom, q):
+def generate_reed_solomon_vandermonde_matrix_old(polynom, q):
     n = len(polynom.value)
     m = n
 
@@ -598,30 +620,57 @@ def generate_reed_solomon_vandermonde_matrix(polynom, q):
     return V
 
 
-def generate_reed_solomon_code(e, d):
-    alpha = determine_primitive_element(2**e)
+def generate_reed_solomon_vandermonde_matrix(polynom, q, mt):
+    n = len(polynom.value)
+    m = n
 
-    #generator_polynom = generate_reed_solomon_generator_polynom(alpha, q, d)
-    #generator_matrix = generate_reed_solomon_generator_matrix(generator_polynom, q, d)
-    #control_polynom = generate_reed_solomon_control_polynom(alpha, q, d)
-    #control_matrix = generate_reed_solomon_control_matrix(control_polynom, d)
-    #vandermonde_matrix = generate_reed_solomon_vandermonde_matrix(generator_polynom, q)
+    V = []
+    for i in range(0, m):  # 0 <= i <= m-1
+        p_string = ''
+        for j in range(n):  # 0 <= j <= n-1
+            if j == 0:
+                p_string += "1"
+                continue
+
+            result_polynom = P(str(polynom.value[i]))
+            for k in range(j-1):
+                result_polynom = mul_bin(
+                    result_polynom, P(polynom.value[i]), mt, q)
+
+            p_string += str(result_polynom.value)
+        V.append(P(p_string))
+
+    return V
+
+
+def generate_reed_solomon_code(e, d, mt):
+    alpha = determine_primitive_element(2**e, mt)
+    q = 2**e
+
+    generator_polynom = generate_reed_solomon_generator_polynom(
+        alpha, q, d, mt)
+    generator_matrix = generate_reed_solomon_generator_matrix(
+        generator_polynom, q, d)
+    control_polynom = generate_reed_solomon_control_polynom(alpha, q, d, mt)
+    control_matrix = generate_reed_solomon_control_matrix(control_polynom, d)
+    vandermonde_matrix = generate_reed_solomon_vandermonde_matrix(
+        generator_polynom, q, mt)
 
     print("e:", e)
     print("d:", d)
 
-    #print("\nAlpha:", alpha)
-    #print("Generator-Polynom:", generator_polynom.value)
-    #print("Kontroll-Polynom:", control_polynom.value)
+    print("\nAlpha:", alpha)
+    print("Generator-Polynom:", generator_polynom.value)
+    print("Kontroll-Polynom:", control_polynom.value)
 
-    # print("\nGenerator-Matrix:")
-    # print_matrix(generator_matrix)
+    print("\nGenerator-Matrix:")
+    print_matrix(generator_matrix)
 
-    # print("\nKontroll-Matrix:")
-    # print_matrix(control_matrix)
+    print("\nKontroll-Matrix:")
+    print_matrix(control_matrix)
 
-    # print("\nVandermonde-Matrix:")
-    # print_matrix(vandermonde_matrix)
+    print("\nVandermonde-Matrix:")
+    print_matrix(vandermonde_matrix)
 
 
 def exercise1():
@@ -631,7 +680,7 @@ def exercise1():
     print("» Multiplikationstabelle «")
 
     # Choose an e between 2 and 8
-    e = 2
+    e = 3
 
     start_time = time.time()
     mt = MulTab(P(ips[e]))
@@ -796,16 +845,18 @@ def exercise6():
     print("» Reed-Solomon-Code «")
 
     # Choose e, d for Reed-Solomon-Code construction with q = 2^e
-    e = 2
-    d = 5
+    e = 3
+    d = 3
 
-    generate_reed_solomon_code(e, d)
+    mt = MulTab(P(ips[e]))
+
+    generate_reed_solomon_code(e, d, mt)
 
 
 if __name__ == '__main__':
-    exercise1()
+    # exercise1()
     # exercise2()
-    exercise3()
+    # exercise3()
     # exercise4()
     # exercise5()
-    # exercise6()
+    exercise6()
