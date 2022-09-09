@@ -317,32 +317,45 @@ def generate_control_matrix(gm):
     return km
 
 
-def generate_syndrom_table(km, q, mt):
+def generate_syndrom_table(km, e, mt):
     n = len(km)
+    q = 2**e
     syndrom_table = {}
 
     syndrom_table['0'*len(km[0].value)] = P('0'*n)
+
+    # generate syndroms with only 1 error
     for i in range(n):
         for j in range(1, q):
+            cur_pol = P((str(j) + ('0' * i)).zfill(n))
             syndrom = ""
             for k in range(len(km[0])):
-
+                teil_syndrom = str(mt.values[int(km[n-1-i].value[k])][j])
+                teil_syndrom_dec = int(teil_syndrom, 2)
+                syndrom += str(teil_syndrom_dec)
 
             syndrom_table[syndrom] = cur_pol
 
-    for i in range(2**n):
-        cur_pol = str(bin(i)[2:].zfill(n))
-        temp_pol = P('0'*len(km[0].value))
-        for j in range(n):
-            if cur_pol[j] == '0':
-                continue
+    # generate remaining errors
+    for i in range(q**n):
+        cur_pol = P(str(bin(i)[2:].zfill(n*e)))
+        cur_pol_dec = bin_to_dec(e, cur_pol)
+        temp_pol = P('0'*len(km[0].value * e))
 
-            temp_pol += km[j]
+        for j in range(n):
+            if cur_pol_dec.value[j] != '0':
+                syndrom = ""
+                for k in range(len(km[0])):
+                    teil_syndrom = str(
+                        mt.values[int(km[j].value[k])][int(cur_pol_dec.value[j])]).zfill(e)
+                    syndrom += str(teil_syndrom)
+
+                temp_pol = (temp_pol + P(syndrom))
 
         temp_pol = temp_pol.mod(2)
-
-        if temp_pol.value not in syndrom_table:
-            syndrom_table[temp_pol.value] = P(cur_pol)
+        temp_pol_dec = bin_to_dec(e, temp_pol)
+        if temp_pol_dec.value not in syndrom_table:
+            syndrom_table[temp_pol_dec.value] = P(cur_pol_dec)
 
     return syndrom_table
 
@@ -363,7 +376,7 @@ def error_correction_with_syndrom_table(code_polynom, km, syndrom_table):
     return syndrom_class, (code_polynom + error_polynom).mod(2)
 
 
-def calc_g_mul_ht(gm, km):
+def calc_g_mul_ht(gm, km, mt):
     n = len(gm[0].value)
 
     temp = P('0' * len(km[0].value))
@@ -373,7 +386,14 @@ def calc_g_mul_ht(gm, km):
             if e_gm.value[j] == '0':
                 continue
 
-            temp += km[j]
+            syndrom = ""
+            for k in range(len(km[0])):
+                teil_syndrom = str(
+                    mt.values[int(km[j].value[k])][int(e_gm.value[j])])
+                teil_syndrom_dec = int(teil_syndrom, 2)
+                syndrom += str(teil_syndrom_dec)
+
+            temp = (temp + P(syndrom))
 
     result = temp.mod(2).value
 
@@ -476,7 +496,7 @@ def determine_primitive_element(q):
 
     for alpha in range(1, q):
         gf_without_zero = []
-        for i in range(q-1): # 0 <= i <= q-2
+        for i in range(q-1):  # 0 <= i <= q-2
             gf_without_zero.append((alpha ** i) % q)
 
         if set(gf_without_zero) == set(gf_target):
@@ -510,7 +530,7 @@ def mul_with_mod(p1, p2, q):
 
 def generate_reed_solomon_generator_polynom(alpha, q, d):
     g_list = []
-    for i in range(1, d): # 1 <= i <= d-1
+    for i in range(1, d):  # 1 <= i <= d-1
         value = -(alpha ** i) % q
         p = P('1' + str(value))
         g_list.append(p)
@@ -524,7 +544,7 @@ def generate_reed_solomon_generator_polynom(alpha, q, d):
 
 def generate_reed_solomon_control_polynom(alpha, q, d):
     g_list = [P('1' + str(-1 % q))]
-    for i in range(d, q-1): # d <= i <= q-2
+    for i in range(d, q-1):  # d <= i <= q-2
         value = -(alpha ** i) % q
         p = P('1' + str(value))
         g_list.append(p)
@@ -588,14 +608,14 @@ def generate_reed_solomon_code(e, d):
     #print("Generator-Polynom:", generator_polynom.value)
     #print("Kontroll-Polynom:", control_polynom.value)
 
-    #print("\nGenerator-Matrix:")
-    #print_matrix(generator_matrix)
+    # print("\nGenerator-Matrix:")
+    # print_matrix(generator_matrix)
 
-    #print("\nKontroll-Matrix:")
-    #print_matrix(control_matrix)
+    # print("\nKontroll-Matrix:")
+    # print_matrix(control_matrix)
 
-    #print("\nVandermonde-Matrix:")
-    #print_matrix(vandermonde_matrix)
+    # print("\nVandermonde-Matrix:")
+    # print_matrix(vandermonde_matrix)
 
 
 def exercise1():
@@ -664,7 +684,8 @@ def exercise3():
     codeword = P("11110")
 
     n = len(gm[0])
-    print("GF(2^" + str(e) + ")^" + str(n) + " = GF(" + str(2 ** e) + ")^" + str(n))
+    print("GF(2^" + str(e) + ")^" + str(n) +
+          " = GF(" + str(2 ** e) + ")^" + str(n))
     print("\nGenerator-Matrix:")
     print_matrix(gm)
     print("\nGenerator-Matrix (Binär):")
@@ -681,9 +702,10 @@ def exercise3():
     km = generate_control_matrix(dec_kgm)
     mt = MulTab(P(ips[e]))
     mt.calc_table()
-    syndrom_table = generate_syndrom_table(km, 2**e, mt)
-    syndrom_class, corrected_codeword = error_correction_with_syndrom_table(codeword, km, syndrom_table)
-    g_mul_ht_result = calc_g_mul_ht(gm, km)
+    syndrom_table = generate_syndrom_table(km, e, mt)
+    syndrom_class, corrected_codeword = error_correction_with_syndrom_table(
+        codeword, km, syndrom_table)
+    g_mul_ht_result = calc_g_mul_ht(bin_array_to_dec_array(e, gm), km, mt)
 
     print("\nKanonische-Generator-Matrix:")
     print_matrix(bin_array_to_dec_array(e, kgm))
@@ -691,7 +713,7 @@ def exercise3():
     print_matrix(kgm)
 
     print("\nKontroll-Matrix:")
-    print_matrix(bin_array_to_dec_array(e, km))
+    print_matrix(km)
     print("\nKontroll-Matrix (Binär):")
     print_matrix(km)
 
@@ -700,9 +722,12 @@ def exercise3():
         print(key, '\t', value.value, sep='')
 
     print("\nSyndrom Klasse:", syndrom_class)
-    print("Empfangenes Codeword:", bin_to_dec(e, codeword), "(Binär: " + str(codeword.value) + ")")
-    print("Korrigiertes Codeword:", bin_to_dec(e, corrected_codeword), "(Binär: " + str(corrected_codeword.value) + ")")
-    print("G * Ht:", bin_to_dec(e, g_mul_ht_result), "(Binär: " + str(g_mul_ht_result.value) + ")")
+    print("Empfangenes Codeword:", bin_to_dec(e, codeword),
+          "(Binär: " + str(codeword.value) + ")")
+    print("Korrigiertes Codeword:", bin_to_dec(e, corrected_codeword),
+          "(Binär: " + str(corrected_codeword.value) + ")")
+    print("G * Ht:", bin_to_dec(e, g_mul_ht_result),
+          "(Binär: " + str(g_mul_ht_result.value) + ")")
 
 
 def exercise4():
@@ -773,8 +798,8 @@ def exercise6():
 
 if __name__ == '__main__':
     exercise1()
-    #exercise2()
+    # exercise2()
     exercise3()
-    #exercise4()
-    #exercise5()
-    #exercise6()
+    # exercise4()
+    # exercise5()
+    # exercise6()
