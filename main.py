@@ -317,22 +317,18 @@ def generate_control_matrix(gm):
     return km
 
 
-def p_mul_matrix(p, m):
-    for i in range(len(p)):
-        pm = m[i].mul(p.value[i])
-        print(pm)
-
-
-def generate_syndrom_table(km, q):
+def generate_syndrom_table(km, q, mt):
     n = len(km)
     syndrom_table = {}
 
     syndrom_table['0'*len(km[0].value)] = P('0'*n)
     for i in range(n):
         for j in range(1, q):
-            cur_pol = P((str(j) + ('0' * i)).zfill(n))
-            s = p_mul_matrix(cur_pol, km)
-            syndrom_table[km[len(km)-1-i]] = cur_pol
+            syndrom = ""
+            for k in range(len(km[0])):
+                
+
+            syndrom_table[syndrom] = cur_pol
 
     for i in range(2**n):
         cur_pol = str(bin(i)[2:].zfill(n))
@@ -609,7 +605,7 @@ def exercise1():
     print("» Multiplikationstabelle «")
 
     # Choose an e between 2 and 8
-    e = 4
+    e = 2
 
     start_time = time.time()
     mt = MulTab(P(ips[e]))
@@ -683,9 +679,9 @@ def exercise3():
 
     # kontroll
     km = generate_control_matrix(dec_kgm)
-    dec_km = dec_array_to_bin_array(e, km)
-
-    syndrom_table = generate_syndrom_table(km, 2**e)
+    mt = MulTab(P(ips[e]))
+    mt.calc_table()
+    syndrom_table = generate_syndrom_table(km, 2**e, mt)
     syndrom_class, corrected_codeword = error_correction_with_syndrom_table(codeword, km, syndrom_table)
     g_mul_ht_result = calc_g_mul_ht(gm, km)
 
@@ -776,7 +772,7 @@ def exercise6():
 
 
 if __name__ == '__main__':
-    #exercise1()
+    exercise1()
     #exercise2()
     exercise3()
     #exercise4()
