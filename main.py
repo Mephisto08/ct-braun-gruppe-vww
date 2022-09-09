@@ -736,7 +736,7 @@ def exercise3():
     ]
 
     # Choose received codeword
-    codeword = P("11110")
+    codeword = P("10211")
 
     n = len(gm[0])
     print("GF(2^" + str(e) + ")^" + str(n) +
@@ -856,7 +856,7 @@ def exercise6():
 if __name__ == '__main__':
     # exercise1()
     # exercise2()
-    # exercise3()
+    exercise3()
     # exercise4()
     # exercise5()
     exercise6()

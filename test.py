@@ -94,34 +94,51 @@ class TestCase(unittest.TestCase):
 
     def test_generate_syndrom_table(self):
         print("Running test_generate_syndrom_table")
+        mt = MulTab(P(ips[2]))
+        mt.calc_table()
+
         kgm = generate_canonical_generator_matrix(self.gm1, 2)
         km = generate_control_matrix(kgm)
-        syndrom_table = generate_syndrom_table(km)
-        self.assertEqual(syndrom_table["0000"].value, "00000")
-        self.assertEqual(syndrom_table["0001"].value, "00001")
-        self.assertEqual(syndrom_table["0010"].value, "00010")
-        self.assertEqual(syndrom_table["0100"].value, "00100")
-        self.assertEqual(syndrom_table["1000"].value, "01000")
-        self.assertEqual(syndrom_table["1010"].value, "10000")
-        self.assertEqual(syndrom_table["0011"].value, "00011")
-        self.assertEqual(syndrom_table["0101"].value, "00101")
-        self.assertEqual(syndrom_table["0110"].value, "00110")
-        self.assertEqual(syndrom_table["0111"].value, "00111")
-        self.assertEqual(syndrom_table["1001"].value, "01001")
-        self.assertEqual(syndrom_table["1011"].value, "01011")
-        self.assertEqual(syndrom_table["1100"].value, "01100")
-        self.assertEqual(syndrom_table["1101"].value, "01101")
-        self.assertEqual(syndrom_table["1110"].value, "01110")
-        self.assertEqual(syndrom_table["1111"].value, "01111")
+        syndrom_table = generate_syndrom_table(km, 2, mt)
+        self.assertEqual(syndrom_table["000"].value, "00000")
+        self.assertEqual(syndrom_table["010"].value, "00010")
+        self.assertEqual(syndrom_table["310"].value, "03002")
+        self.assertEqual(syndrom_table["130"].value, "00130")
+
 
     def test_error_correction_with_syndrom_table(self):
         print("Running test_error_correction_with_syndrom_table")
-        kgm = generate_canonical_generator_matrix(self.gm1, 2)
-        km = generate_control_matrix(kgm)
-        syndrom_table = generate_syndrom_table(km)
-        corrected_codeword = error_correction_with_syndrom_table(
-            P("11110"), km, syndrom_table)
-        self.assertEqual(corrected_codeword[1].value, "11010")
+        e = 2
+
+        # Choose generator matrix
+        gm = [
+            P("10111"),
+            P("01123")
+        ]
+
+        # Choose received codeword
+        codeword = P("10211")
+
+        n = len(gm[0])
+        print_matrix(dec_array_to_bin_array(e, gm))
+
+        gm = dec_array_to_bin_array(e, gm)
+        codeword = dec_to_bin(e, codeword)
+
+        # kanonische
+        kgm = generate_canonical_generator_matrix(gm, 2)
+        dec_kgm = bin_array_to_dec_array(e, kgm)
+
+        # kontroll
+        km = generate_control_matrix(dec_kgm)
+        mt = MulTab(P(ips[e]))
+        mt.calc_table()
+        syndrom_table = generate_syndrom_table(km, e, mt)
+        syndrom_class, corrected_codeword = error_correction_with_syndrom_table(
+            codeword, km, syndrom_table)
+        asd = bin_to_dec(e, corrected_codeword)
+        print("asd", asd)
+        self.assertEqual(asd, "10201")
 
     def test_g_mul_ht(self):
         print("Running test_g_mul_ht")
