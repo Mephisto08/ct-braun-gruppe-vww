@@ -326,7 +326,7 @@ def generate_syndrom_table(km, q, mt):
         for j in range(1, q):
             syndrom = ""
             for k in range(len(km[0])):
-                
+
 
             syndrom_table[syndrom] = cur_pol
 
