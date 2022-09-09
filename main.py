@@ -665,6 +665,8 @@ def exercise3():
     print("GF(2^" + str(e) + ")^" + str(n) + " = GF(" + str(2 ** e) + ")^" + str(n))
     print("\nGenerator-Matrix:")
     print_dec_matrix(gm)
+    print("\nGenerator-Matrix (Binär):")
+    print_matrix(dec_array_to_bin_pol_array(e, gm))
 
     gm = dec_array_to_bin_pol_array(e, gm)
     codeword = dec_to_bin_pol(e, codeword)
@@ -677,18 +679,23 @@ def exercise3():
 
     print("\nKanonische-Generator-Matrix:")
     print_dec_matrix(bin_pol_array_to_dec_array(e, kgm))
+    print("\nKanonische-Generator-Matrix (Binär):")
+    print_matrix(kgm)
 
     print("\nKontroll-Matrix:")
     print_dec_matrix(bin_pol_array_to_dec_array(e, km))
+    print("\nKontroll-Matrix (Binär):")
+    print_matrix(km)
 
     print("\nSyndrom Tabelle:\nSyndr.\tError")
     for key, value in syndrom_table.items():
         print(key, '\t', value.value, sep='')
 
-    print("\nEmpfangenes Codeword:", bin_pol_to_dec(e, codeword))
-    print("Syndrom Klasse:", syndrom_class)
-    print("Korrigiertes Codeword:", bin_pol_to_dec(e, corrected_codeword))
-    print("G * Ht:", bin_pol_to_dec(e, g_mul_ht_result))
+    print("\nSyndrom Klasse:", syndrom_class)
+    print("Empfangenes Codeword:", bin_pol_to_dec(e, codeword), "(Binär: " + str(codeword.value) + ")")
+    print("Korrigiertes Codeword:", bin_pol_to_dec(e, corrected_codeword), "(Binär: " + str(corrected_codeword.value) + ")")
+    print("G * Ht:", bin_pol_to_dec(e, g_mul_ht_result), "(Binär: " + str(g_mul_ht_result.value) + ")")
+
 
 def exercise4():
     print("\n┎────────────────┒")
@@ -757,9 +764,9 @@ def exercise6():
 
 
 if __name__ == '__main__':
-    #exercise1()
-    #exercise2()
+    exercise1()
+    exercise2()
     exercise3()
-    #exercise4()
-    #exercise5()
-    #exercise6()
+    exercise4()
+    exercise5()
+    exercise6()
