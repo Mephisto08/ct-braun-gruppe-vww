@@ -69,8 +69,8 @@ class TestCase(unittest.TestCase):
 
     # Aufgabe 3
     gm1 = [
-        P("11010"),
-        P("11010")
+        P("10111"),
+        P("01123")
     ]
 
     def test_generate_canonical_generator_matrix(self):
@@ -80,17 +80,17 @@ class TestCase(unittest.TestCase):
         print("Running test_generate_canonical_generator_matrix")
 
         kgm = generate_canonical_generator_matrix(self.gm1, 2)
-        self.assertEqual(kgm[0].value, "11010")
+        self.assertEqual(P(kgm[0].value), P("10111"))
 
     def test_generate_control_matrix(self):
         print("Running test_generate_control_matrix")
         kgm = generate_canonical_generator_matrix(self.gm1, 2)
         km = generate_control_matrix(kgm)
-        self.assertEqual(km[0].value, "1010")
-        self.assertEqual(km[1].value, "1000")
-        self.assertEqual(km[2].value, "0100")
-        self.assertEqual(km[3].value, "0010")
-        self.assertEqual(km[4].value, "0001")
+        self.assertEqual(km[0].value, "111")
+        self.assertEqual(km[1].value, "101")
+        self.assertEqual(km[2].value, "100")
+        self.assertEqual(km[3].value, "010")
+        self.assertEqual(km[4].value, "001")
 
     def test_generate_syndrom_table(self):
         print("Running test_generate_syndrom_table")
@@ -100,10 +100,10 @@ class TestCase(unittest.TestCase):
         kgm = generate_canonical_generator_matrix(self.gm1, 2)
         km = generate_control_matrix(kgm)
         syndrom_table = generate_syndrom_table(km, 2, mt)
-        self.assertEqual(syndrom_table["000"].value, "00000")
-        self.assertEqual(syndrom_table["010"].value, "00010")
-        self.assertEqual(syndrom_table["310"].value, "03002")
-        self.assertEqual(syndrom_table["130"].value, "00130")
+        self.assertEqual(syndrom_table["000"], P("00000"))
+        self.assertEqual(syndrom_table["010"], P("00010"))
+        self.assertEqual(syndrom_table["201"], P("00201"))
+        self.assertEqual(syndrom_table["130"], P("00130"))
 
 
     def test_error_correction_with_syndrom_table(self):
@@ -137,15 +137,17 @@ class TestCase(unittest.TestCase):
         syndrom_class, corrected_codeword = error_correction_with_syndrom_table(
             codeword, km, syndrom_table)
         asd = bin_to_dec(e, corrected_codeword)
-        print("asd", asd)
-        self.assertEqual(asd, "10201")
+        self.assertEqual(asd, P("10201"))
 
     def test_g_mul_ht(self):
         print("Running test_g_mul_ht")
+        mt = MulTab(P(ips[2]))
+        mt.calc_table()
+
         kgm = generate_canonical_generator_matrix(self.gm1, 2)
         km = generate_control_matrix(kgm)
-        g_mul_ht_result = calc_g_mul_ht(self.gm1, km)
-        self.assertEqual(g_mul_ht_result.value, "0000")
+        g_mul_ht_result = calc_g_mul_ht(self.gm1, km, mt)
+        self.assertEqual(g_mul_ht_result.value, "000")
 
     # Aufgabe 4
     def test_hamming_codes_m3(self):

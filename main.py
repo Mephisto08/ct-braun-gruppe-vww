@@ -758,6 +758,8 @@ def exercise3():
     mt = MulTab(P(ips[e]))
     mt.calc_table()
     syndrom_table = generate_syndrom_table(km, e, mt)
+
+    print("kack", syndrom_table["000"])
     syndrom_class, corrected_codeword = error_correction_with_syndrom_table(
         codeword, km, syndrom_table)
     g_mul_ht_result = calc_g_mul_ht(bin_array_to_dec_array(e, gm), km, mt)
