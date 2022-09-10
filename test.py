@@ -190,6 +190,34 @@ class TestCase(unittest.TestCase):
         self.assertEqual(
             reed_muller_code[5].value, "00000000000000001111111111111111")
 
+        # Aufgabe 5
+
+    def test_reed_solomon_code(self):
+        print("\n┎────────────────┒")
+        print("┃   Exercise 6   ┃")
+        print("┖────────────────┚")
+
+        print("Running test_reed_solomon_code with e = 3, d = 3")
+        e = 3
+        d = 3
+
+        mt = MulTab(P(ips[e]))
+
+        alpha = determine_primitive_element(2 ** e, mt)
+        q = 2 ** e
+
+        generator_polynom = generate_reed_solomon_generator_polynom(
+            alpha, q, d, mt)
+        generator_matrix = generate_reed_solomon_generator_matrix(
+            generator_polynom, q, d)
+        control_polynom = generate_reed_solomon_control_polynom(alpha, q, d, mt)
+        control_matrix = generate_reed_solomon_control_matrix(control_polynom, d)
+        vandermonde_matrix = generate_reed_solomon_vandermonde_matrix(
+            generator_polynom, q, mt)
+
+        self.assertEqual(alpha, 2)
+        self.assertEqual(generator_polynom, P("165"))
+        self.assertEqual(control_polynom, P("164107"))
 
 if __name__ == '__main__':
     unittest.main()
